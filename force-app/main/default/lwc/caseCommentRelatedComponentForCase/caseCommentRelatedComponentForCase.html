@@ -1,0 +1,71 @@
+<!-- sldsValidatorIgnore -->
+<template>
+   <div class>
+      <div class="slds-grid slds-page-header forceRelatedListCardHeader">
+         <div class="slds-col slds-size_1-of-1 slds-medium-size_9-of-12 slds-large-size_9-of-12">
+            <div class="icon-container slds-text-heading_small slds-m-right_small">
+               <lightning-icon icon-name="custom:custom19" size="small"></lightning-icon>
+               <b class="slds-p-left_small">Case Comments (</b>{totalCaseComments}<b>)</b>
+            </div>
+         </div>
+         <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-large-size_3-of-12 buttonDesign">
+            <div class="slds-clearfix">
+               <div class="slds-float_none">
+                  <lightning-button class="slds-button slds-float_right" label="New" title="Add Comment" onclick={handleShowComment} ></lightning-button>
+          </div>
+            </div>
+         </div>
+      </div>
+      <lightning-card hide-header="true">
+         <template if:true={caseComments}>
+            <div class="slds-p-horizontal_small">
+               <lightning-datatable
+                  key-field="Id"
+                  data={pagedCaseComments}
+                  columns={columns}
+                  hide-checkbox-column="true">
+               </lightning-datatable>
+            </div>
+            <div class="slds-m-top_medium slds-text-align_right slds-p-right_medium">
+               <lightning-button-group>
+                  <lightning-button class="slds-button slds-float_none " label="Previous" onclick={handlePrevious} disabled={previousDis}></lightning-button>
+                  <lightning-button class="slds-button slds-float_none " label="Next" onclick={handleNext}  disabled={nextDis}></lightning-button>
+               </lightning-button-group>
+            </div>
+         </template>
+         <template if:true={error}>
+            <p class="slds-p-horizontal_medium slds-text-color_error">{error}</p>
+         </template>
+      </lightning-card>
+      <template if:true={launchFlow}>
+         <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+               <!-- Modal/Popup Box LWC header here -->
+               <header class="slds-modal__header">
+                  <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                     <lightning-icon icon-name="utility:close"
+                        alternative-text="close"
+                        variant="inverse"
+                        size="small" ></lightning-icon>
+                     <span class="slds-assistive-text">Close</span>
+                  </button>
+                  <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">New Case Comment</h2>
+               </header>
+               <!-- Modal/Popup Box LWC body starts here -->
+               <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                  <lightning-flow
+                     flow-api-name='Close_Case_Related_New_Case_Comment_Handling_Flow'
+                     flow-input-variables={inputVariables}
+                     onstatuschange={handleStatusChange}>
+                  </lightning-flow>
+               </div>
+            </div>
+            <!-- Modal/Popup Box LWC footer starts here -->
+            <footer class="slds-modal__footer">
+            </footer>
+   </div>
+   </section>
+   <div class="slds-backdrop slds-backdrop_open"></div>
+   </template>
+   </div>
+</template>

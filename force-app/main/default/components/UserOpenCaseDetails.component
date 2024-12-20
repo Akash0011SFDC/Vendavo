@@ -1,0 +1,61 @@
+<!--
+ * @description       : 
+ * @author            : 
+ * @group             : 
+ * @last modified on  : 23-10-2024 
+ * @last modified by  : 
+-->
+<apex:component controller="UserOpenCasesController" access="global">
+    <apex:attribute name="caseOwnerUserId" type="String" description="The Id of the User whose cases to display" assignTo="{!userId}"/>
+    
+    <table class="caseTable" cellpadding="5" rules="all" style="border-collapse: collapse; width: 100%;">
+        <thead>
+            <tr style="background-color: #f2f2f2; font-weight: bold;">
+                <th>Case Owner</th>
+                <th>Case Number</th>
+                <th>Date/Time Opened</th>
+                <th>Account Name</th>
+                <th>Priority</th>
+                <th>Product</th>
+                <th>Status</th>
+                <th>Subject</th>
+                <th>Age</th>
+                <th>Case Last Modified Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <apex:repeat value="{!cases}" var="case">
+                <tr style="{!IF(CONTAINS($Component.caseRow,'odd'), 'background-color: #ffffff;', 'background-color: #f9f9f9;')}">
+                    <td>{!case.Case_Owner_Name__c}</td>
+                    <td>{!case.CaseNumber}</td>
+                    <td>
+                        <apex:outputText value="{0,date,M/d/yyyy h:mm a}">
+                            <apex:param value="{!case.CreatedDate}" />
+                        </apex:outputText>
+                    </td>
+                    <td>{!case.Account.Name}</td>
+                    <td>{!case.Priority}</td>
+                    <td>{!case.Product_Module__c}</td>
+                    <td>{!case.Status}</td>
+                    <td>{!case.Subject}</td>
+                    <td>{!case.Age__c}</td>
+                    <td>
+                        <apex:outputText value="{0,date,M/d/yyyy h:mm a}">
+                            <apex:param value="{!case.LastModifiedDate}" />
+                        </apex:outputText>
+                    </td>
+                </tr>
+            </apex:repeat>
+        </tbody>
+    </table>
+    
+    <style>
+        .caseTable td, .caseTable th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .caseTable tr:hover {
+            background-color: #f5f5f5 !important;
+        }
+    </style>
+</apex:component>

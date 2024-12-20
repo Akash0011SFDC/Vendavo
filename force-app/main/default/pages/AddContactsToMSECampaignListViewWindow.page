@@ -1,0 +1,19 @@
+<apex:page standardController="Contact"
+           id="muopp"
+           recordSetVar="contacts"
+           docType="html-5.0"
+           standardStylesheets="false"
+           showheader="false"
+           sidebar="false"
+           wizard="true"
+           rendered="true"
+>
+  <script>
+    function listWindow(){
+      var listWindow = window.open('/apex/AddContactsToMSECampaignListView?selected={!selected}','Add Contacts');
+      listWindow.focus();
+    }
+    listWindow();
+    window.history.back();
+  </script>
+</apex:page>

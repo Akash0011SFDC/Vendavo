@@ -1,0 +1,206 @@
+<apex:page controller="leadFunnelAggcontroller">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<style>
+    .ProspectLeads{
+            width: 100%;
+            height: 130px;
+            background: Blue;
+            margin: auto;
+            float: left;
+    
+    }
+    .EngagedLeads{
+            width: 100%;
+            height: 130px;
+            background: #003300;
+            margin: auto;
+    
+    }
+    .ContactedLeads{
+            width: 100%;
+            height: 130px;
+            background: Green;
+            margin: auto;
+            float: left;
+    
+    }   
+    .QualifiedLeads{
+            width: 100%;
+            height: 130px;
+            background: #33CC00;
+            margin: auto;
+            float: left;
+    
+    } 
+    
+    .SALLeads{
+            width: 100%;
+            height: 130px;
+            background: #FF6600;
+            margin: auto;
+    
+    }      
+
+    .SQLLeads{
+            width: 100%;
+            height: 130px;
+            background: #FF9900;
+            margin: auto;
+            float: left;
+    
+    }               
+
+    .OpportunityLeads{
+            width: 100%;
+            height: 130px;
+            background: #FFCC00;
+            margin: auto;
+            float: left;
+    
+    }       
+    .InnerFunnelDiv{
+            width: 300px;
+            height: 100px;
+            margin: auto;
+            text-line: center;
+            color: white;
+            float: left;
+           
+    
+    } 
+    .status_Title{
+            font-size: 20px;
+            margin: auto;
+            color: white;
+            
+    
+    }   
+
+
+</style>    
+    
+    <apex:form >
+        <apex:commandButton value="Generate New Lead Funnel" action="{!getLeadTallyResults}"/>
+            <div class = "funnel_visualization" style="Width: 100%, Height: 100%" >
+                <div class="ProspectLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Prospect Leads</h3>
+                        <br/>
+                       Current Snapshot: {!prospectNow}    &nbsp;    Average Score: {!avgScoreProspect}
+                       <br/>
+                       Net-New this Month: {!prospectNewValue} 
+                       <br/>
+                       Transitioned to Qualified this Month: {!transitionProspect_Qualified}  ({!ratio_Prospect_Qualified}%)
+                       <br/>
+                       Transitioned Out of Status: {!prospectOldValue} 
+                       <br/>
+                       Transitioned Along Happy Path: {!happyPath_Trans_ScoreProspect}  ({!happyPath_Ratio_ScoreProspect}%)                                             
+                    </div>
+                </div>
+
+                 <div class="EngagedLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Engaged Leads</h3>
+                        <br/>
+                       Current Snapshot: {!EngagedNow}      &nbsp;    Average Score: {!avgScoreEngaged}
+                       <br/>
+                       Net-New this Month: {!EngagedNewValue} 
+                       <br/>
+                       Transitioned to Contacted this Month: {!transitionQualified_SAL}  ({!ratio_Qualified_SAL}%)
+                       <br/>
+                       Transitioned Out of Status: {!EngagedOldValue} 
+                       <br/>
+                       Transitioned Along Happy Path: {!happyPath_Trans_ScoreEngaged}  ({!happyPath_Ratio_ScoreEngaged}%)                      
+                    </div>
+                       
+                    </div>
+                    
+                 <div class="ContactedLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Contacted Leads</h3>
+                        <br/>
+                       Current Snapshot: {!ContactedNow}   &nbsp;     Average Score: {!avgScoreContacted}
+                       <br/>
+                       Net-New this Month: {!ContactedNewValue} 
+                       <br/>
+                       Transitioned to SAL this Month: {!transitionQualified_SAL}  ({!ratio_Qualified_SAL}%)
+                       <br/>
+                       Transitioned Out of Status: {!ContactedOldValue} 
+                       <br/>
+                       Transitioned Along Happy Path: {!happyPath_Trans_ScoreContacted}  ({!happyPath_Ratio_ScoreContacted}%)                      
+                    </div>
+                       
+                    </div>
+
+                 <div class="QualifiedLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Qualified Leads</h3>
+                        <br/> 
+                       Current Snapshot: {!QualifiedNow}   &nbsp;    Average Score:{!avgScoreQualified}
+                       <br/>
+                       Net-New this Month: {!QualifiedNewValue} 
+                       <br/>
+                       Transitioned to SAL this Month: {!transitionQualified_SAL}  ({!ratio_Qualified_SAL}%)
+                       <br/>
+                       Transitioned Out of Status: {!QualifiedOldValue} 
+                       <br/>
+                       Transitioned Along Happy Path: {!happyPath_Trans_ScoreQualified}  ({!happyPath_Ratio_ScoreQualified}%)                      
+                    </div>
+                       
+                    </div>
+                    
+                 <div class="SALLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Sales Accepted Leads</h3>
+                        <br/>
+                       Current Snapshot: {!SALNow} &nbsp;  Average Score: {!avgScoreSAL}
+                       <br/>
+                       Net-New this Month: {!SALNewValue} 
+                       <br/>
+                       Transitioned to SQL this Month: {!transitionSAL_SQL}  ({!ratio_SAL_SQL}%)
+                       <br/>
+                       Transitioned Out of Status: {!SALOldValue} 
+                       <br/>
+                       Transitioned Along Happy Path: {!happyPath_Trans_ScoreSAL}  ({!happyPath_Ratio_ScoreSAL}%)                      
+                    </div>
+                       
+                    </div>                    
+
+                 <div class="SQLLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Sales Qualified Leads</h3>
+                        <br/>
+                       Current Snapshot: {!SQLNow}  &nbsp; Average Score: {!avgScoreSQL}
+                       <br/>
+                       Net-New this Month: {!SQLNewValue} 
+                       <br/>
+                       Transitioned to Opportunity this Month: {!transitionSQL_Opportunity}  ({!ratio_SQL_Opportunity}%)
+                       <br/>
+                       Transitioned Out of Status: {!SQLOldValue} 
+                       <br/>
+                       Transitioned Along Happy Path: {!happyPath_Trans_ScoreSQL}  ({!happyPath_Ratio_ScoreSQL}%)                      
+                    </div>
+                       
+                    </div>  
+                    
+                 <div class="OpportunityLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Opportunity Stage Leads</h3>
+                        <br/>
+                       Current Snapshot: {!OpportunityNow}  
+                       <br/>
+                       Net-New this Month: {!SQLNewValue} 
+                       <br/>
+                       Transitioned Out of Status: {!OpportunityOldValue} 
+                   
+                    </div>
+                       
+                    </div>                     
+                
+            </div>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,12 @@
+<template>
+    <template if:true={showExpiredSupport}>
+        <div class="slds-box slds-box_small slds-theme_default" style="background-color:  #ff6600;" role="alert">
+            <h2 style="color: Black; font-weight: 700;">Support Expired</h2>
+        </div>
+    </template>
+    <template if:true={showExecutiveSupport}>
+        <div class="slds-box slds-box_small slds-theme_default" style="background-color: black;" role="alert">
+            <h2 style="color: white; font-weight: 700;">Executive Support</h2>
+        </div>
+    </template>
+</template>

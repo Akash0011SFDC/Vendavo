@@ -1,0 +1,25 @@
+.cutomeTitle{
+	display: inline-block;
+}
+.topSection{margin-top: -10px;}
+.cusTable{ border-top: 1px solid #ccc; overflow: auto;}
+.cusTable .slds-table {min-width: 750px !important;}
+.inputWidth{ max-width: 100% !important;}
+.cusTable{max-height: calc(100vh - 262px) !important;}
+
+
+@media only screen and (max-width: 767px) {
+	.topSection{ 
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+	}
+}
+
+@media only screen and (max-width: 479px) {
+	.topSectionBtn{ 
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+	}
+}

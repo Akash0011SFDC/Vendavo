@@ -1,0 +1,11 @@
+<apex:page standardController="Account" extensions="KickfireInAcctVFP" lightningStylesheets="true" >   
+    <apex:pageBlock title="Kickfire Page Visits" >           
+        <apex:pageBlockTable value="{!kickfires}" var="newkick">
+          
+            <apex:column value="{!newkick.Page_Visit_Datetime__c}" />            
+            <apex:column value="{!newkick.Name}" />
+            <apex:column value="{!newkick.identity__c}" />
+            <apex:column value="{!newkick.Referral__c}" />
+        </apex:pageBlockTable>         
+    </apex:pageBlock>    
+</apex:page>

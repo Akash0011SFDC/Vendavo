@@ -1,0 +1,42 @@
+<apex:page StandardController="SIC__c">
+<html>
+
+  <head>
+
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    
+    <script type="text/javascript">
+ 
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+
+        var data = google.visualization.arrayToDataTable([
+
+          ['Marketing Touches By Channel', 'Number Of Touches'],     
+          ['Webinars',  {!sic__c.Number_of_Webinar_Touches__c}],
+          ['Events',      {!sic__c.Number_of_Event_Touches__c}],
+          ['Advertising',  {!sic__c.Number_of_Advertising_Touches__c}],
+          ['Email', {!sic__c.Number_of_Email_Touches__c}],
+          ['Telemarketing',     {!sic__c.Number_of_Telemarketing_Touches__c}],
+          ['Direct Mail',  {!sic__c.Number_of_Direct_Mail_Touches__c}],          
+          ['Website',{!sic__c.Number_of_Website_Touches__c}]
+
+        ]);
+
+        var options = {
+          title: 'Marketing Influence'
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+        chart.draw(data, options);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="piechart" style="width: 900px; height: 500px;"></div>
+
+  </body>
+</html>
+</apex:page>

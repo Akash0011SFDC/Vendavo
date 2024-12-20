@@ -1,0 +1,10 @@
+<apex:page standardController="Account" extensions="keysInAcctVFP" lightningStylesheets="true" >   
+    <apex:pageBlock title="Keywords" >           
+        <apex:pageBlockTable value="{!keywords}" var="newkey">
+          
+            <apex:column value="{!newkey.Name}" />            
+            <apex:column value="{!newkey.Domain__c}" />
+            <apex:column value="{!newkey.Score__c}" />
+        </apex:pageBlockTable>         
+    </apex:pageBlock>    
+</apex:page>

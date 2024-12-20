@@ -1,0 +1,336 @@
+<apex:page standardController="Opportunity" extensions="LDTouchesforVFPIndividual" id="LDTouchesforVFPIndividualID"  docType="HTML" showHeader="True" lightningStylesheets="true">
+  <HTML> 
+   <head>
+ <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    
+    <script type="text/javascript">  
+    
+    $(function(){
+        var stagename = '{!Opportunity.StageName}';
+         var currentStage = stagename.substring(0,1);
+         $('.current-stage-' + currentStage).css('color', 'red').css('font-weight', 'bold');
+        $('.header-current-stage-' + currentStage + ' div').css('color', 'red').append(' *');
+       
+        });
+        
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+
+        var data = google.visualization.arrayToDataTable([
+          ['Campaign Effectiveness', 'Touches By Channel'],
+          ['Webinar',     {!Opportunity.Number_Of_Webinar_Touches__c}],
+          ['Telemarketing',      {!Opportunity.Number_Of_Telemarketing_Touches__c}],
+          ['Website',  {!Opportunity.Number_Of_Website_Touches__c}],
+          ['Advertising', {!Opportunity.Number_of_Advertising_Touches__c}],
+          ['Direct Mail',    {!Opportunity.Number_Of_DirectMail_Touches__c}],
+          ['Email',    {!Opportunity.Number_Of_Email_Touches__c}],
+          ['Event',    {!Opportunity.Number_Of_Event_Touches__c}]          
+        ]);
+
+        var options = {
+          title: 'Campaign Effectiveness', 
+          legend: { position: 'bottom', alignment: 'start' }
+       
+    
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+        chart.draw(data, options);
+      }
+    </script>
+ <script type="text/javascript">
+    var salesVelocityClosedWon;
+    var salesVelocityClosedLost;
+    var timeToDisplay = '{!Opportunity.of_days_in_flight__c}';
+    var stage = '{!Opportunity.StageName}';
+    var stringOfChart = 'Sales Velocity compared to average {!Opportunity.Type} deals'
+    var salesVelocityClosedWon = parseInt({!salesVelocityCW['avgClosedWon']});
+     
+    var salesVelocityClosedLost = parseInt({!salesVelocityCL['avgClosedLost']});
+    
+    if(stage  == 'Closed Won' || stage  == 'Closed Lost' || stage  == 'Disqualified'){
+        timeToDisplay = '{!Opportunity.of_days_to_close__c}';
+    }
+
+    google.load("visualization", "1", {packages:["corechart"]});
+    google.setOnLoadCallback(drawChart);
+    
+    function drawChart() {
+ var data = google.visualization.arrayToDataTable               
+      ([
+        ["Sales Velocity", "Number of Days", { role: "style" } ],
+        ["Closed Won Average", salesVelocityClosedWon , "Green"],
+        ["This Opportunity", parseInt(timeToDisplay) , "silver"],
+        ["Closed Lost Average", salesVelocityClosedLost , "Red"]
+      ]);
+
+      var view = new google.visualization.DataView(data);
+      view.setColumns([0, 1,
+                       { calc: "stringify",
+                         sourceColumn: 1,
+                         type: "string",
+                         role: "annotation" },
+                       2]);
+
+      var options = {
+        title: stringOfChart,
+        width: 600,
+        height: 400,
+        bar: {groupWidth: "95%"},
+        legend: { position: "none" },
+      };
+      var chart = new google.visualization.ColumnChart(document.getElementById("columnchart_values"));
+      chart.draw(view, options);
+  }
+  </script>
+  <style>
+          .timeSeriesUnOrderedList{
+              float: left;
+          
+          }
+          .nav>li>a {
+          padding: 5px;
+          font-size: 10px;
+          border-radius: 0px;
+        }
+        .nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover {
+            color: #fff;
+            background-color: #08af51;
+            border: 1px solid #08af51;
+            border-bottom-color: transparent;
+        }
+        .nav-tabs {
+          border-bottom: 0px;
+        }
+  </style>  
+  </head> 
+  <body>
+     <title>Vendavo Opportunity Analyzer</title>
+
+
+         <div class="container" Style = "Width:100%">
+
+                  <ul class="nav nav-tabs">
+                  <li class="active"><a href="#home" role="tab" data-toggle="tab">Touches</a></li>
+                   <li><a href="#touches" role="tab" data-toggle="tab">Marketing Touches</a> </li>
+                      <li><a href="#keySalesTouches" role="tab" data-toggle="tab">Sales Touches</a></li>
+                      <li><a href="#chart" role="tab" data-toggle="tab">Campaigns Influence</a></li>                      
+                      <li><a href="#velocity" role="tab" data-toggle="tab">Sales Velocity</a></li>
+                      <li><a href="#timeSeries" role="tab" data-toggle="tab">Marketing Time Series</a></li>
+                      <li><a href="#daysinStage" role="tab" data-toggle="tab">Stages Progression</a></li>
+                      
+                    </ul>
+
+
+                      <div class="tab-content">
+  
+                  <div role="tabpanel" class="tab-pane active" id="home" Style = "Width:100%">
+                    <apex:pageBlock title="Inferred Opportunity Source" >
+                    <apex:pageBlockTable value="{!Opportunity}" var="Touches" style="width:100%;height:100%">
+                        <apex:column value="{!Touches.Inferred_Opportunity_Source__c}"/>                     
+                        <apex:column value="{!Touches.Inferred_Opportunity_Source_Person__c}"/>  
+                        <apex:column value="{!Touches.Inferred_Opportunity_Source_Type__c}"/>     
+                        <apex:column value="{!Touches.Inferred_Opportunity_Source_Date__c}"/>                                                                                                                                                                                 
+                    </apex:pageBlockTable> 
+                    </apex:pageBlock> 
+
+                    <apex:pageBlock title="Marketing Engagement Overview" >
+                    <apex:pageBlockTable value="{!Opportunity}" var="Touches" style="width:100%;height:100%">
+                        <apex:column value="{!Touches.Marketing_Touches_Before_Opp_Creation__c}"/>                                                                               
+                        <apex:column value="{!Touches.Marketing_Touches_in_Last_12_Months__c}"/>  
+                        <apex:column value="{!Touches.Number_of_Engaged_Leads_Contacts__c}"/>                                                                               
+                        <apex:column value="{!Touches.Number_of_Unique_Campaigns__c}"/>                                                                               
+                    </apex:pageBlockTable> 
+                    </apex:pageBlock>                                                                                        
+
+                                    
+                    <apex:pageBlock title="Marketing Touches" >
+                    <apex:pageBlockTable value="{!Opportunity}" var="Touches" style="width:100%;height:100%">
+                        <apex:column value="{!Touches.Total_Marketing_Touches__c}" headerValue="Total Touches" />                     
+                        <apex:column value="{!Touches.Number_of_Webinar_Touches__c}" headerValue="Webinar" /> 
+                        <apex:column value="{!Touches.Number_of_Email_Touches__c}" headerValue="Email" /> 
+                        <apex:column value="{!Touches.Number_of_Event_Touches__c}" headerValue="Event" /> 
+                        <apex:column value="{!Touches.Number_of_Advertising_Touches__c}" headerValue="Advertising"/> 
+                        <apex:column value="{!Touches.Number_of_Website_Touches__c}" headerValue="Website"  /> 
+                        <apex:column value="{!Touches.Number_of_Telemarketing_Touches__c}" headerValue="Telemarketing"/> 
+                                                          
+                    </apex:pageBlockTable> 
+                    </apex:pageBlock> 
+                    <apex:pageBlock title="Sales Touches">
+                    <apex:pageBlockTable value="{!ListOfSalesTouch}" var="Touches">
+                        <apex:column headerValue="Total Sales Touches"> 
+                        {!Touches['TotalSalesInteractions']}
+                        </apex:column>
+                        <apex:column headerValue="Analyst Engagements"> 
+                        {!Touches['AnalystEngagements']}
+                        </apex:column>                        
+                        <apex:column headerValue="Sales Meetings"> 
+                        {!Touches['SalesMeetings']}
+                        </apex:column>
+                        <apex:column headerValue="Sales Requests"> 
+                        {!Touches['SalesRequests']}
+                        </apex:column>  
+                        <apex:column headerValue="Sales RFP's"> 
+                        {!Touches['SalesRFP']}
+                        </apex:column> 
+                        <apex:column headerValue="All Other Sales Interactions"> 
+                        {!Touches['SalesOther']}
+                        </apex:column>                                                                                                              
+                    </apex:pageBlockTable> 
+                    </apex:pageBlock>  
+                    
+                 </div>                   
+               
+                  <div role="tabpanel" class="tab-pane" id="touches">
+               
+                      
+                <apex:outputPanel layout="block" style="width:100%;height:100%">   
+                   <apex:pageBlock title="First Marketing Touch">
+                    <apex:pageBlockTable value="{!Opportunity}" var="FLT">
+                        <apex:column headerValue="Campaign Name" value="{!FLT.First_Marketing_Touch_Before_Create_Name__c }"/> 
+                        <apex:column headerValue="Lead/ Contact Associated" value="{!FLT.First_Marketing_Touch_Person__c }"/> 
+                        <apex:column headerValue="Campaign Type" value="{!FLT.First_Marketing_Touch_Before_Create_Type__c }"/> 
+                        <apex:column headerValue="Date of Action" value="{!FLT.First_Marketing_Touch_Before_Create_Date__c }"/> 
+                                                          
+                    </apex:pageBlockTable> 
+                  </apex:pageBlock>
+                   <apex:pageBlock title="Last Marketing Touch Before Opportunity Creation">
+                    <apex:pageBlockTable value="{!Opportunity}" var="FLT">
+                         <apex:column headerValue="Campaign Name" value="{!FLT.Last_Marketing_Touch_Before_Opp_Name__c }"/> 
+                        <apex:column headerValue="Lead/ Contact Associated" value="{!FLT.Last_Marketing_Touch_Before_Opp_Person__c}"/> 
+                        <apex:column headerValue="Campaign Type" value="{!FLT.Last_Marketing_Touch_Before_Opp_Type__c }"/> 
+                        <apex:column headerValue="Date of Action" value="{!FLT.Last_Marketing_Touch_Before_Opp_Date__c }"/> 
+                                                          
+                    </apex:pageBlockTable> 
+                  </apex:pageBlock>
+                   <apex:pageBlock title="Last Marketing Touch Before Opportunity Close Date">
+                    <apex:pageBlockTable value="{!Opportunity}" var="FLT">
+                         <apex:column headerValue="Campaign Name" value="{!FLT.Last_Marketing_Touch_Before_Close_Name__c  }"/> 
+                        <apex:column headerValue="Lead/ Contact Associated" value="{!FLT.Last_Marketing_Touch_Before_Close_Person__c }"/> 
+                        <apex:column headerValue="Campaign Type" value="{!FLT.Last_Marketing_Touch_Before_Close_Type__c }"/> 
+                        <apex:column headerValue="Date of Action" value="{!FLT.Last_Marketing_Touch_Before_Close_Date__c }"/> 
+                                                          
+                    </apex:pageBlockTable> 
+                  </apex:pageBlock>                                        
+              </apex:outputPanel>
+                  </div>
+                  
+                  <div role="tabpanel" class="tab-pane" id="keySalesTouches">
+                <apex:outputPanel layout="block" style="width:100%;height:100%">   
+                   <apex:pageBlock title="First Sales Touch">
+                    <apex:pageBlockTable value="{!Opportunity}" var="FLT">
+                        <apex:column headerValue="Task Subject" value="{!FLT.First_Sales_Touch_Before_Creation_SUBJ__c }"/> 
+                        <apex:column headerValue="Contact Associated" value="{!FLT.First_Sales_Touch_Before_Creation_person__c }"/> 
+                        <apex:column headerValue="Interaction Type" value="{!FLT.First_Sales_Touch_Before_Create_type__c }"/> 
+                        <apex:column headerValue="Date of Action" value="{!FLT.First_Sales_Touch_Before_Creation_date__c }"/> 
+                                                          
+                    </apex:pageBlockTable> 
+                  </apex:pageBlock>
+                   <apex:pageBlock title="Last Sales Touch Before Opportunity Creation">
+                    <apex:pageBlockTable value="{!Opportunity}" var="FLT">
+                         <apex:column headerValue="Task Subject" value="{!FLT.Last_Sales_Touch_Before_Opp_Subj__c}"/> 
+                        <apex:column headerValue="Contact Associated" value="{!FLT.Last_Sales_Touch_Before_Opp_Person__c}"/> 
+                        <apex:column headerValue="Interaction Type" value="{!FLT.Last_Sales_Touch_Before_Opp_Type__c}"/> 
+                        <apex:column headerValue="Date of Action" value="{!FLT.Last_Sales_Touch_Before_Opp_Date__c}"/> 
+                                                          
+                    </apex:pageBlockTable> 
+                  </apex:pageBlock>
+                   <apex:pageBlock title="Last Sales Touch Before Opportunity Close Date">
+                    <apex:pageBlockTable value="{!Opportunity}" var="FLT">
+                         <apex:column headerValue="Task Subject" value="{!FLT.Last_Sales_Touch_Before_Close_Subj__c}"/> 
+                        <apex:column headerValue="Contact Associated" value="{!FLT.Last_Sales_Touch_Before_Close_Person__c}"/> 
+                        <apex:column headerValue="Interaction Type" value="{!FLT.Last_Sales_Touch_Before_Close_Type__c}"/> 
+                        <apex:column headerValue="Date of Action" value="{!FLT.Last_Sales_Touch_Before_Close_Date__c}"/> 
+                                                          
+                    </apex:pageBlockTable> 
+                  </apex:pageBlock>                                        
+              </apex:outputPanel>                  
+                  
+                  </div>
+                  <div role="tabpanel" class="tab-pane" id="chart">
+
+              <div class="row">
+                <div class="col-sm-4">
+             
+                  <div id="piechart" style="width: 100%; height: 40%;"></div>
+                </div>
+                <div class="col-sm-8">
+                    <apex:pageBlock title="Campaigns That Influenced This Opportunity">
+                    <apex:pageBlockTable value="{!CampaignTouches}" var="Camps">
+                                <apex:column headerValue="Campaign Name" value="{!Camps.CampaignName}">
+                                </apex:column>
+                                <apex:column headerValue="Campaign Type" value="{!Camps.CampaignType}"/>                                
+                                <apex:column headerValue="Number Of Touches" value="{!Camps.NumberOfTouchesOnCamp}"/>                              
+                    </apex:pageBlockTable> 
+                  </apex:pageBlock>      
+                </div>
+              </div>
+            </div>
+                  <div role="tabpanel" class="tab-pane" id="velocity">
+
+            <div id="columnchart_values" style="width: 700px; height: 100%;"></div>
+                    
+                  </div>
+                  
+                  <div role="tabpanel" class="tab-pane" id="timeSeries">
+                    <div style="display: inline">
+                    <ul>
+                        <li class="timeSeriesUnOrderedList">
+                            <analytics:reportChart reportId="00O38000003slKp" filter="{column:'LeanData__Campaign_Opportunity__c.Opportunity_ID__c', operator:'equals',value:'{!ID}'}"  cacheResults="false" showRefreshButton="false" size="medium"/>
+                        </li>
+                        <li class="timeSeriesUnOrderedList">
+                            <analytics:reportChart reportId="00O38000004J4bf" filter="{column:'LeanData__Campaign_Opportunity__c.Opportunity_ID__c', operator:'equals',value:'{!ID}'}"  cacheResults="false" showRefreshButton="false" size="medium"/>
+                        </li>
+                    </ul>
+                    </div> 
+                  </div>  
+
+                  <div role="tabpanel" class="tab-pane" id="daysinStage" Style = "Width:100%">
+                        <apex:pageBlock title="Number of Days in Stage" >
+                    <apex:pageBlockTable value="{!Opportunity}" var="Touches" style="width:100%;height:100%">
+                        <apex:column value="{!Touches.Days_in_Current_Stage__c}"/>                     
+                        <apex:column headerClass="header-current-stage-M" styleClass="current-stage-M" value="{!Touches.Days_in_Stage_M__c}"/> 
+                        <apex:column headerClass="header-current-stage-1" styleClass="current-stage-1" value="{!Touches.Days_in_Stage_1__c}"/>                     
+                        <apex:column headerClass="header-current-stage-2" styleClass="current-stage-2" value="{!Touches.Days_in_Stage_2__c}"/>                     
+                        <apex:column headerClass="header-current-stage-3" styleClass="current-stage-3" value="{!Touches.Days_in_Stage_3__c}"/>                     
+                        <apex:column headerClass="header-current-stage-4" styleClass="current-stage-4" value="{!Touches.Days_in_Stage_4__c}"/>                     
+                        <apex:column headerClass="header-current-stage-5" styleClass="current-stage-5" value="{!Touches.Days_in_Stage_5__c}"/>                     
+                        <apex:column headerClass="header-current-stage-6" styleClass="current-stage-6" value="{!Touches.Days_in_Stage_6__c}"/>   
+                          <apex:column headerClass="header-current-stage-7" styleClass="current-stage-7" value="{!Touches.Days_in_Stage_7__c}"/>                     
+                                             
+                                          
+                    </apex:pageBlockTable>  
+                    </apex:pageBlock> 
+             <apex:pageBlock title="First Date in Stage" >
+                    <apex:pageBlockTable value="{!Opportunity}" var="Touches" style="width:100%;height:100%">
+                        
+                        <apex:column colspan="2" headerClass="header-current-stage-M" styleClass="current-stage-M" value="{!Touches.Date_in_Stage_M__c}"/> 
+                        <apex:column headerClass="header-current-stage-1" styleClass="current-stage-1" value="{!Touches.Date_in_Stage_1__c}"/>                     
+                        <apex:column headerClass="header-current-stage-2" styleClass="current-stage-2" value="{!Touches.Date_in_Stage_2__c}"/>                     
+                        <apex:column headerClass="header-current-stage-3" styleClass="current-stage-3" value="{!Touches.Date_in_Stage_3__c}"/>                     
+                        <apex:column headerClass="header-current-stage-4" styleClass="current-stage-4" value="{!Touches.Date_in_Stage_4__c}"/>                     
+                        <apex:column headerClass="header-current-stage-5" styleClass="current-stage-5" value="{!Touches.Date_in_Stage_5__c}"/>                     
+                        <apex:column headerClass="header-current-stage-6" styleClass="current-stage-6" value="{!Touches.Date_in_Stage_6__c}"/>
+                      <apex:column headerClass="header-current-stage-7" styleClass="current-stage-7" value="{!Touches.Date_in_Stage_7__c}"/>
+                                          
+                    </apex:pageBlockTable>  
+                    </apex:pageBlock> 
+                        <p style="font-weight:bold; color:red;">* Current Stage</p>
+                 </div>        
+
+                </div>
+
+
+</div>
+
+  </body>
+</HTML>        
+</apex:page>

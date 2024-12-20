@@ -1,0 +1,291 @@
+<apex:page standardController="Lead_Funnel__c">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"/>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<style>
+    .ProspectLeads{
+            width: 100%;
+            height: 110px;
+            background: Blue;
+            margin: auto;
+            font-size: 12px;
+    
+    }
+    .EngagedLeads{
+            width: 100%;
+            height: 110px;
+            background: #003300;
+            margin: auto;
+            font-size: 12px;
+    
+    }
+    .ContactedLeads{
+            width: 100%;
+            height: 110px;
+            background: Green;
+            margin: auto;
+            font-size: 12px;
+    
+    }   
+    .QualifiedLeads{
+            width: 100%;
+            height: 110px;
+            background: #33CC00;
+            margin: auto;
+            font-size: 12px;
+    
+    } 
+    
+    .SALLeads{
+            width: 100%;
+            height: 110px;
+            background: #FF6600;
+            margin: auto;
+            font-size: 12px;
+    
+    }      
+
+    .SQLLeads{
+            width: 100%;
+            height: 110px;
+            background: #FF9900;
+            margin: auto;
+            font-size: 12px;
+    
+    }               
+
+    .OpportunityLeads{
+            width: 100%;
+            height: 110px;
+            background: #FFCC00;
+            margin: auto;
+            font-size: 12px;
+            color: black;
+    
+    } 
+    
+    .NurtureLeads{
+            width: 100%;
+            height: 110px;
+            background: #383838;
+            margin: auto;
+            font-size: 12px;
+    
+    }            
+    .InnerFunnelDiv{
+            width: 300px;
+            height: 100px;
+            margin: auto;
+            text-line: center;
+            color: White ;
+           
+    
+    } 
+    .status_Title{
+            font-size: 20px;
+            margin: auto;
+            color: white;
+            
+    
+    }   
+</style>    
+    
+    <apex:form >
+            <div class = "funnel_visualization" style="Width: 100%, Height: 100%" >
+                <div class="ProspectLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Prospect Leads</h3>
+                        <br/>
+                       Current Snapshot: {!Lead_Funnel__c.Prospect_Leads_Snapshot__c}    &nbsp;    Average Score: {!Lead_Funnel__c.avgScoreProspect__c}
+                       <br/>
+                       Net-New this Month: {!Lead_Funnel__c.Prospect_Leads_Net_New__c} 
+                       <br/>
+                       Transitioned to Qualified: WIP (WIP%)
+                       <br/>
+                       Transitioned Out of Status: {!Lead_Funnel__c.Prospect_Leads_Transitioned__c} 
+                       <br/>
+                       <script>
+                        var prospectHappyPathRatio = ({!Lead_Funnel__C.happyPath_Trans_Prospect__c} /{!Lead_Funnel__c.Prospect_Leads_Transitioned__c}) * 100;
+                            if( isNaN(prospectHappyPathRatio) == 1 ){
+                                percentageRatio = 0;
+                            }else{
+                                percentageRatio = parseInt(prospectHappyPathRatio);
+                            }                         
+                        document.write('Transitioned Along Happy Path: ' + {!Lead_Funnel__C.happyPath_Trans_Prospect__c} + ' (' + percentageRatio + '%)');
+                        </script>                                            
+                    </div>
+                </div>
+
+                 <div class="EngagedLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Engaged Leads</h3>
+                        <br/>
+                       Current Snapshot:  {!Lead_Funnel__c.Engaged_Leads_Snapshot__c}       &nbsp;    Average Score: {!Lead_Funnel__c.avgScoreEngaged__c}
+                       <br/>
+                       Net-New this Month: {!Lead_Funnel__c.Engaged_Leads_Net_New__c} 
+                       <br/>
+                       Transitioned to Contacted: WIP (WIP%)
+                       <br/>
+                       Transitioned Out of Status: {!Lead_Funnel__c.Engaged_Leads_Transitioned__c} 
+                       <br/>
+                       <script>
+                        var prospectHappyPathRatio = ({!Lead_Funnel__C.happyPath_Trans_Engaged__c} /{!Lead_Funnel__c.Engaged_Leads_Transitioned__c}) * 100;
+                        var percentageRatio = parseInt(prospectHappyPathRatio);
+                            if( isNaN(prospectHappyPathRatio) == 1 ){
+                                percentageRatio = 0;
+                            }else{
+                                percentageRatio = parseInt(prospectHappyPathRatio);
+                            }  
+                        document.write('Transitioned Along Happy Path: ' + {!Lead_Funnel__C.happyPath_Trans_Engaged__c} + ' (' + percentageRatio + '%)');
+                        </script>                                              
+                    </div>
+                       
+                    </div>
+                    
+                 <div class="ContactedLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Contacted Leads</h3>
+                        <br/>
+                       Current Snapshot: {!Lead_Funnel__c.Contacted_Leads_Now__c}       &nbsp;    Average Score: {!Lead_Funnel__c.avgScoreContacted__c}
+                       <br/>
+                       Net-New this Month: {!Lead_Funnel__c.Contacted_Leads_Net_New__c} 
+                       <br/>
+                       Transitioned to SAL: WIP (WIP%)
+                       <br/>
+                       Transitioned Out of Status: {!Lead_Funnel__c.Contacted_Leads_Transitioned__c} 
+                       <br/>
+                      
+                       <script>
+                        var prospectHappyPathRatio = ({!Lead_Funnel__C.happyPath_Trans_Contacted__c} /{!Lead_Funnel__c.Contacted_Leads_Transitioned__c}) * 100;
+                        var percentageRatio = parseInt(prospectHappyPathRatio);
+                            if( isNaN(prospectHappyPathRatio) == 1 ){
+                                percentageRatio = 0;
+                            }else{
+                                percentageRatio = parseInt(prospectHappyPathRatio);
+                            }                        
+                        document.write('Transitioned Along Happy Path: ' + {!Lead_Funnel__C.happyPath_Trans_Contacted__c} + ' (' + percentageRatio + '%)');
+                        </script>                                            
+                    </div>
+                       
+                    </div>
+
+                 <div class="QualifiedLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Qualified Leads</h3>
+                        <br/> 
+                       Current Snapshot:  {!Lead_Funnel__c.Qualified_Snapshot__c}       &nbsp;    Average Score: {!Lead_Funnel__c.avgScoreQualified__c}
+                       <br/>
+                       Net-New this Month: {!Lead_Funnel__c.Qualified_Leads_Net_New__c} 
+                       <br/>
+                       Transitioned to SAL: WIP (WIP%)
+                       <br/>
+                       Transitioned Out of Status: {!Lead_Funnel__c.Qualified_Leads_Transitioned__c}  
+                       <br/>
+                       <script>
+                        var prospectHappyPathRatio = ({!Lead_Funnel__C.happyPath_Trans_Qualified__c} /{!Lead_Funnel__c.Qualified_Leads_Transitioned__c}) * 100;
+                        var percentageRatio = parseInt(prospectHappyPathRatio);
+                            if( isNaN(prospectHappyPathRatio) == 1 ){
+                                percentageRatio = 0;
+                            }else{
+                                percentageRatio = parseInt(prospectHappyPathRatio);
+                            }                    
+                        document.write('Transitioned Along Happy Path: ' + {!Lead_Funnel__C.happyPath_Trans_Qualified__c} + ' (' + percentageRatio + '%)');
+                        </script>                                                
+                    </div>
+                       
+                    </div>
+                    
+                 <div class="SALLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Sales Accepted Leads</h3>
+                        <br/>
+                       Current Snapshot: {!Lead_Funnel__c.SAL_Leads_Snapshot__c}    &nbsp;    Average Score: {!Lead_Funnel__c.avgScoreSAL__c}
+                       <br/>
+                       Net-New this Month: {!Lead_Funnel__c.SAL_Leads_Net_New__c} 
+                       <br/>
+                       Transitioned to SQL: WIP (WIP%)
+                       <br/>
+                       Transitioned Out of Status: {!Lead_Funnel__c.SAL_Leads_Transitioned__c}  
+                       <br/>  
+                       <script>
+                        var prospectHappyPathRatio = ({!Lead_Funnel__C.happyPath_Trans_SAL__c} /{!Lead_Funnel__c.SAL_Leads_Transitioned__c}) * 100;
+                        var percentageRatio = parseInt(prospectHappyPathRatio);
+                            if( isNaN(prospectHappyPathRatio) == 1 ){
+                                percentageRatio = 0;
+                            }else{
+                                percentageRatio = parseInt(prospectHappyPathRatio);
+                            }                     
+                        document.write('Transitioned Along Happy Path: ' + {!Lead_Funnel__C.happyPath_Trans_SAL__c} + ' (' + percentageRatio + '%)');
+                        </script>                                           
+                    </div>
+                       
+                    </div>                    
+
+                 <div class="SQLLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Sales Qualified Leads</h3>
+                        <br/>
+                       Current Snapshot: {!Lead_Funnel__c.SQL_Leads_Snapshot__c}    &nbsp;    Average Score: {!Lead_Funnel__c.avgScoreSQL__c}
+                       <br/>
+                       Net-New this Month: {!Lead_Funnel__c.SQL_Leads_Net_New__c} 
+                       <br/>
+                       Transitioned to Opportunity: WIP (WIP%)
+                       <br/>
+                       Transitioned Out of Status: {!Lead_Funnel__c.SQL_Leads_Transitioned__c}  
+                       <br/>
+                       <script>
+                        var prospectHappyPathRatio = ({!Lead_Funnel__C.happyPath_Trans_SQL__c} /{!Lead_Funnel__c.SQL_Leads_Transitioned__c}) * 100;
+                        var percentageRatio = parseInt(prospectHappyPathRatio);
+                            if( isNaN(prospectHappyPathRatio) == 1 ){
+                                percentageRatio = 0;
+                            }else{
+                                percentageRatio = parseInt(prospectHappyPathRatio);
+                            }                      
+                        document.write('Transitioned Along Happy Path: ' + {!Lead_Funnel__C.happyPath_Trans_SQL__c} + ' (' + percentageRatio + '%)');
+                        </script>                                              
+                    </div>
+                       
+                    </div>  
+                    
+                 <div class="OpportunityLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Opportunity Stage Leads</h3>
+                        <br/>
+                       Current Snapshot:  &nbsp;  Closed Won:{!Lead_Funnel__c.CLosed_Won_Leads_Snapshot__c} &nbsp;  Closed Lost:{!Lead_Funnel__c.CLosed_Lost_Leads_Snapshot__c}
+                       <br/>
+                       Net-New this Month:  &nbsp;  Closed Won: {!Lead_Funnel__c.Closed_Won_Net_New__c}  &nbsp; Closed Lost:  {!Lead_Funnel__c.Closed_Lost_Net_New__c}
+                       <br/>
+                       Transitioned Out of Status: Closed Won:{!Lead_Funnel__c.Closed_Lost_Leads_Transitioned__c}  &nbsp; Closed Lost:{!Lead_Funnel__c.Closed_Won_Transitioned__c} 
+                   
+                    </div>
+                       
+                    </div>       
+                 <div class="NurtureLeads" style="Width: 100%, Height: 100%">
+                    <div class="InnerFunnelDiv" style="Width: 100%, Height: 100%">
+                        <h3 class="status_Title">Nurture Leads</h3>
+                        <br/>
+                       Current Snapshot: {!Lead_Funnel__c.Nurture_Leads_Snapshot__c}
+                       <br/>
+                       Net-New this Month: {!Lead_Funnel__c.Nurture_Leads_Net_New__c}
+                       <br/>
+                       Transitioned Out of Status: {!Lead_Funnel__c.Nurture_Leads_Transitioned__c}  
+                       <br/>
+                         <script>
+                        var prospectHappyPathRatio = ({!Lead_Funnel__C.happyPath_Trans_Nurture__c} /{!Lead_Funnel__c.Nurture_Leads_Transitioned__c}) * 100;
+                        var percentageRatio = parseInt(prospectHappyPathRatio);
+                            if( isNaN(prospectHappyPathRatio) == 1 ){
+                                percentageRatio = 0;
+                            }else{
+                                percentageRatio = parseInt(prospectHappyPathRatio);
+                            }                     
+                        document.write('Transitioned Along Happy Path: ' + {!Lead_Funnel__C.happyPath_Trans_Nurture__c} + ' (' + percentageRatio + '%)');
+                        </script>                    
+                    </div>
+                       
+                    </div>                                     
+                
+            </div>
+    </apex:form>
+</apex:page>

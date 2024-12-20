@@ -1,0 +1,62 @@
+<apex:page standardController="Contact"
+           id="muopp"
+           recordSetVar="contacts"
+           docType="html-5.0"
+           standardStylesheets="false"
+           showheader="false"
+           sidebar="false"
+           wizard="true"
+           rendered="true"
+>
+  <script>
+    function myAction() {
+      // Get the Object IDs that were checked
+      idArray = '{!$CurrentPage.parameters.selected}'.slice(1, -1).split(',').map(function(s) { return s.slice(0,-3).trim()});
+      if(idArray.length > 0) {
+        f = document.createElement("form");
+        f.action="https://toutapp.com/salesforce_bridge";
+        f.method = "post";
+
+        // add the session id as a parameter
+        i = document.createElement("input");
+        i.id = "session";
+        i.name = "session";
+        i.type = "hidden";
+        i.value = "{!$Api.Session_ID}";
+        f.appendChild(i);
+
+        // add the server location as a parameter
+        i = document.createElement("input");
+        i.id = "server";
+        i.name = "server";
+        i.type = "hidden";
+        i.value = "{!$Api.Partner_Server_URL_90}";
+        f.appendChild(i);
+        // add the idArray as a parameter
+        i = document.createElement("input");
+        i.id = "ids";
+        i.name = "ids";
+        i.type = "hidden";
+        i.value = idArray;
+        f.appendChild(i);
+
+        // add the object type
+        i = document.createElement("input");
+        i.id = "object_type";
+        i.name = "object_type";
+        i.type = "hidden";
+        i.value = "Contact";
+        f.appendChild(i);
+
+        // add the form to the document.
+        document.body.appendChild(f);
+
+        // submit the form
+        f.submit();
+      } else {
+        alert("Please select at least one contact to push to Marketo Sales.");
+      }
+    }
+    myAction();
+  </script>
+</apex:page>

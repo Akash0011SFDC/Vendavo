@@ -1,0 +1,68 @@
+<!--
+   @description       : This component will be used to show Accounts for enhanced security.
+   @author            : Dreamwares
+   @group             :
+   @last modified on  : Oct 04, 2024
+   @last modified by  :
+   Modifications Log
+   Ticket       ModifiedBy      ModifiedDate        Description
+                Dreamweres      Oct 04, 2024        Intial Developmemt
+-->
+<!-- sldsValidatorIgnore -->
+<template>
+    <lightning-card title=" ">
+        <!-- Total count of records displayed above the data table -->
+        <div class="slds-text-body_regular slds-m-bottom_small slds-p-horizontal_medium">
+            <span class=" slds-size_auto slds-m-right_small">
+                <lightning-icon icon-name="standard:account" alternative-text="Account Icon" size="medium"></lightning-icon>
+            </span>
+            <strong class="slds-page-header__title cutomeTitle" >Accounts </strong> 
+        </div>
+        <!-- Add a div wrapper for search input and action button -->
+        <div class="slds-grid slds-grid_align-spread slds-m-left_medium slds-grid_vertical-align-end topSection">
+            <div>{totalRecordCount}
+                <template if:true={showAdditionalItems}>
+                    <span>+</span>
+                </template>
+                <span> items</span>
+            </div>
+            <div class="slds-grid slds-grid_align-end slds-m-right_medium topSectionBtn">
+                <!-- Search input with standard width and no border -->
+                <lightning-input 
+                    type="search" 
+                    variant="label-hidden"
+                    placeholder="Search Accounts" 
+                    onkeydown={handleSearch}
+                    onchange={handleSearchOnChange}
+                    class="slds-m-right_small inputWidth">
+                </lightning-input>
+                
+                <!-- Create Case button aligned to the right -->
+                <lightning-button 
+                    label="New" 
+                    onclick={handleAddNewAccount} 
+                    class="slds-button slds-no-space">
+                </lightning-button>
+            </div>
+        </div>
+                
+        <!-- Data table container with a specified height -->
+        <div class="slds-m-top_medium cusTable" style="height:90 %;">
+            <lightning-datatable 
+                key-field="Id"
+                data={accounts}
+                columns={columns}
+                enable-infinite-loading={isLoading}
+                onloadmore={loadMoreData}
+                hide-checkbox-column="true"
+                show-row-number-column="true"
+                load-more-offset={rowOffSet}
+                sorted-by={sortBy}
+                sorted-direction={sortDirection}
+                onsort={handleSortAccountData}
+                onrowaction={handleRowAction}>
+            </lightning-datatable> 
+        </div>
+    </lightning-card>
+    
+</template>

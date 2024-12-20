@@ -1,0 +1,3 @@
+<apex:page standardController="Opportunity" showHeader="false" sidebar="false">
+<analytics:reportChart reportId="00O38000003slKp" filter="{column:'LeanData__Campaign_Opportunity__c.Opportunity_ID__c', operator:'equals',value:'{!ID}'}"  cacheResults="false" showRefreshButton="false" size="medium"/>
+</apex:page>

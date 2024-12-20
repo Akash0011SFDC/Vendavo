@@ -1,0 +1,38 @@
+<template>
+        
+    <lightning-card>
+        <template if:true={showSpinner}>
+            <span>
+                <div id="spinnerDiv" class="demo-only demo--inverse">
+                <div class="slds-spinner_container">
+                    <div role="status" class="slds-spinner slds-spinner_medium">
+                        <span class="slds-assistive-text">Loading</span>
+                        <div class="slds-spinner__dot-a"></div>
+                        <div class="slds-spinner__dot-b"></div>
+                    </div>
+                </div>
+                </div>
+            </span>
+        </template>
+       
+        <div class="slds-p-horizontal_medium">
+       
+            <template if:true={customerFlagValues.data}>
+                <div class="slds-grid slds-gutters slds-grid_vertical-align-end">
+                    <div class="slds-col slds-size_4-of-6">
+                        <lightning-combobox name="custFlag" label={fieldLabelName} value={selectedPicklistValue} options={customerFlagValues.data.values} onchange={selectionChangeHandler}> </lightning-combobox>
+                    </div>
+                    <div class="slds-col slds-size_2-of-6">
+                        <lightning-button 
+                                variant="brand"  
+                                label="Submit" 
+                                onclick={handleSubmit} stretch>
+    
+                        </lightning-button>
+                    </div>
+                </div>
+            </template>    
+        </div>
+    </lightning-card>
+    
+</template>

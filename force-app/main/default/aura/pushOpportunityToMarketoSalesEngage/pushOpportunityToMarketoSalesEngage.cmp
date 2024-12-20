@@ -1,0 +1,18 @@
+<aura:component description="Push to Marketo Sales Connect"
+                controller="OpportunityMarketoController"
+                implements="force:lightningQuickActionWithoutHeader,force:hasRecordId,flexipage:availableForRecordHome,flexipage:availableForAllPageTypes">
+  <aura:attribute name="recordObject" type="Object"/>
+  <aura:attribute name="record" type="Object"/>
+  <aura:attribute name="recordError" type="String"/>
+  <force:recordData aura:id="recordLoader"
+                    recordId="{!v.recordId}"
+                    layoutType="FULL"
+                    targetRecord="{!v.record}"
+                    targetFields="{!v.recordObject}"
+                    targetError="{!v.recordError}"
+  />
+    <aura:if isTrue="{!not(empty(v.recordError))}">
+      <div class="recordError">{!v.recordError}</div>
+    </aura:if>
+  <lightning:button label="Push to Marketo Sales Connect" onclick="{!c.myAction}"/>
+</aura:component>
