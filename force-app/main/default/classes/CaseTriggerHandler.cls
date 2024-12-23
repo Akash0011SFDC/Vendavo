@@ -56,14 +56,27 @@ public class CaseTriggerHandler {
     public static void afterUpdate(Map < Id, Case > caseMap, Map < Id, Case > oldCaseMap) {
         List < Case > caseList = new List < Case > ();
         
+       //List < Case > initialAssignmentTimeCaseList = new List < Case > ();
+       //List < Case > initialResponseTimeCaseList = new List < Case > ();
+       List < Case > timeToClosureCaseList = new List < Case > ();
+        
         for (Case caseRec: caseMap.values()) {
             if (caseRec.status != oldCaseMap.get(caseRec.Id).Status) {
                 caseList.add(caseRec);
             }
+        
+            if (caseRec.IsClosed == True && oldCaseMap.get(caseRec.Id).IsClosed != True) {
+                timeToClosureCaseList.add(caseRec);
+            }
+        
         }
         if (!caseList.isEmpty()) {
             trackStatusChangeTiming(caseList);
         }
+        
+        //Calculate time to closure for cases
+        calculateTimeToClosure(timeToClosureCaseList);
+        
     }
     
      /*
@@ -100,6 +113,75 @@ public class CaseTriggerHandler {
         createNewCaseStatusChangeTracker(caseList);
         
     }
+    
+    
+    /*
+* PURPOSE  : Track status change time
+* PARAM    : List of Cases
+* RETURNS  : 
+*/
+    public static void calculateTimeToClosure(List<Case> caseList) {
+        Map<Id, Id> caseIdToAccountIdMap = new Map<Id, Id>();
+        Set<Id> accountIds = new Set<Id>();
+        
+        // Fetch necessary data for calculation
+        for (Case caseRec : [SELECT Id, AccountId FROM Case WHERE Id IN :caseList]) {
+            caseIdToAccountIdMap.put(caseRec.Id, caseRec.AccountId);
+            accountIds.add(caseRec.AccountId);
+        }
+        
+        // Build business hours and holidays maps
+        Map<Id, Map<String, Map<String, Time>>> accountToBusinessHoursMap = new Map<Id, Map<String, Map<String, Time>>>();
+        for (Business_Hours__c businessHours : [
+            SELECT Account__c, Day__c, Start_Time__c, End_Time__c, Time_Zone__c 
+            FROM Business_Hours__c WHERE Account__c IN :accountIds
+        ]) {
+            if (!accountToBusinessHoursMap.containsKey(businessHours.Account__c)) {
+                accountToBusinessHoursMap.put(businessHours.Account__c, new Map<String, Map<String, Time>>());
+            }
+            Map<String, Time> startEndTime = new Map<String, Time>();
+            startEndTime.put('Start', convertTimeToGMT(businessHours.Start_Time__c, businessHours.Time_Zone__c));
+            startEndTime.put('End', convertTimeToGMT(businessHours.End_Time__c, businessHours.Time_Zone__c));
+            accountToBusinessHoursMap.get(businessHours.Account__c).put(businessHours.Day__c, startEndTime);
+        }
+        
+        Map<Id, Set<Date>> accountToHolidaysMap = new Map<Id, Set<Date>>();
+        for (Holiday__c holiday : [
+            SELECT Account__c, Date__c, IsRecurrence__c 
+            FROM Holiday__c WHERE Account__c IN :accountIds
+        ]) {
+            if (!accountToHolidaysMap.containsKey(holiday.Account__c)) {
+                accountToHolidaysMap.put(holiday.Account__c, new Set<Date>());
+            }
+            accountToHolidaysMap.get(holiday.Account__c).add(holiday.Date__c);
+            if (holiday.IsRecurrence__c) {
+                for (Integer year = Date.today().year() - 1; year <= Date.today().year() + 1; year++) {
+                    accountToHolidaysMap.get(holiday.Account__c).add(Date.newInstance(year, holiday.Date__c.month(), holiday.Date__c.day()));
+                }
+            }
+        }
+        
+        // Calculate time to closure for each case
+        List<Case> calculatedCases = new List<Case>();
+        for (Case caseRec : caseList) {
+            
+            Case updatedCase = CalculateBusinessHours.calculateCaseBusinessHours( caseRec, caseRec.CreatedDate, caseRec.ClosedDate,
+                                                                                 caseIdToAccountIdMap, accountToBusinessHoursMap,
+                                                                                 accountToHolidaysMap, 'Closure');
+            
+            updatedCase.Time_to_Closur_Business__c = updatedCase.Time_to_Closur_Business__c;
+            System.debug('5007z00000VcSG3AAN'+ updatedCase.Time_to_Closur_Business__c);
+            calculatedCases.add(updatedCase);
+        }
+        
+        // Update cases
+        if (!calculatedCases.isEmpty()) {
+            
+         update calculatedCases;
+        }
+    }
+    
+    
     /*
     * PURPOSE  : Set End Date and calcualte horur for previous Case Status Change Tracker
     * PARAM    : List of Cases
