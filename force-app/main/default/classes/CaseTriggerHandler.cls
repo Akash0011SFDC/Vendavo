@@ -13,77 +13,94 @@ public class CaseTriggerHandler {
     
     
     /*
-    * PURPOSE  : Before Update Operations
-    * PARAM    : Map of old and new case
-    * RETURNS  : 
-    */
+* PURPOSE  : Before Update Operations
+* PARAM    : Map of old and new case
+* RETURNS  : 
+*/
     public static void beforeUpdate(Map<Id,Case> oldCaseMap, Map<Id,Case> newCaseMap) {
-		//06-11-2024 : Commented to revert the case locking feature.
-       // preventCaseUpdateAfter48Hrs(oldCaseMap, newCaseMap);
+        //06-11-2024 : Commented to revert the case locking feature.
+        // preventCaseUpdateAfter48Hrs(oldCaseMap, newCaseMap);
         
         //23-10-2024 : reverted the case validations for enhanced security
-		//PreventCaseFromUpdateDelete(newCaseMap.Values(),newCaseMap);
-		System.debug('In beforeUpdate trigger');
-		// 03-Dec-2024 : case ownership validation for non secured user
-		PreventCaseToChangeNonSecuredOwner(newCaseMap.Values(),newCaseMap);
-    }
-    
-     /*
-    * PURPOSE  : Before Delete Operations
-    * PARAM    : Map of old 
-    * RETURNS  : 
-    */
-    public static void beforeDelete(Map<Id,Case> oldCaseMap) {
-		//preventCaseUpdateAfter48Hrs(oldCaseMap, newCaseMap);
-		//23-10-2024 : reverted the case validations for enhanced security
-		//PreventCaseFromUpdateDelete(oldCaseMap.Values(),oldCaseMap);
+        //PreventCaseFromUpdateDelete(newCaseMap.Values(),newCaseMap);
+        System.debug('In beforeUpdate trigger');
+        // 03-Dec-2024 : case ownership validation for non secured user
+        PreventCaseToChangeNonSecuredOwner(newCaseMap.Values(),newCaseMap);
     }
     
     /*
-    * PURPOSE  : After Insert Operations
-    * PARAM    : List of Cases
-    * RETURNS  : 
-    */
+* PURPOSE  : Before Delete Operations
+* PARAM    : Map of old 
+* RETURNS  : 
+*/
+    public static void beforeDelete(Map<Id,Case> oldCaseMap) {
+        //preventCaseUpdateAfter48Hrs(oldCaseMap, newCaseMap);
+        //23-10-2024 : reverted the case validations for enhanced security
+        //PreventCaseFromUpdateDelete(oldCaseMap.Values(),oldCaseMap);
+    }
+    
+    /*
+* PURPOSE  : After Insert Operations
+* PARAM    : List of Cases
+* RETURNS  : 
+*/
     public static void afterInsert(List < Case > caseList) {
         trackStatusChangeTiming(caseList);
     }
     
     /*
-    * PURPOSE  : After Update Operations
-    * PARAM    : New Case Map and Old Case Map
-    * RETURNS  :  
-    */
+* PURPOSE  : After Update Operations
+* PARAM    : New Case Map and Old Case Map
+* RETURNS  :  
+*/
     public static void afterUpdate(Map < Id, Case > caseMap, Map < Id, Case > oldCaseMap) {
         List < Case > caseList = new List < Case > ();
         
-       //List < Case > initialAssignmentTimeCaseList = new List < Case > ();
-       //List < Case > initialResponseTimeCaseList = new List < Case > ();
-       List < Case > timeToClosureCaseList = new List < Case > ();
+        //List < Case > initialAssignmentTimeCaseList = new List < Case > ();
+        //List < Case > initialResponseTimeCaseList = new List < Case > ();
+        List < Case > timeToClosureCaseList = new List < Case > ();
+        List < Case > timeToResolveCaseList = new List < Case > ();
         
         for (Case caseRec: caseMap.values()) {
             if (caseRec.status != oldCaseMap.get(caseRec.Id).Status) {
                 caseList.add(caseRec);
             }
-        
-            if (caseRec.IsClosed == True && oldCaseMap.get(caseRec.Id).IsClosed != True) {
+            
+            if (caseRec.IsClosed == True && oldCaseMap.get(caseRec.Id).IsClosed != True && caseRec.ClosedDate!= NUll && caseRec.CreatedDate != NULL
+                || caseRec.IsClosed == False && oldCaseMap.get(caseRec.Id).IsClosed == True && caseRec.ClosedDate == NUll) 
+            {
                 timeToClosureCaseList.add(caseRec);
             }
-        
+            
+            if (caseRec.Support_Resolved_Date__c != oldCaseMap.get(caseRec.Id).Support_Resolved_Date__c) 
+            {
+                timeToResolveCaseList.add(caseRec);
+            }
+            
         }
+        
+        //Calculate Case status tracker
         if (!caseList.isEmpty()) {
             trackStatusChangeTiming(caseList);
         }
         
         //Calculate time to closure for cases
-        calculateTimeToClosure(timeToClosureCaseList);
+        if (!timeToClosureCaseList.isEmpty()) {
+        calculateTimeToBusinessCase(timeToClosureCaseList, 'Closure');
+        }
+        
+        //Calculate time to closure for cases
+        if (!timeToResolveCaseList.isEmpty()) {
+        calculateTimeToBusinessCase(timeToResolveCaseList, 'Resolve');
+        }
         
     }
     
-     /*
-    * PURPOSE  : Prevent case to update after 48hours of case is closed
-    * PARAM    : Map of new case and Map of old case
-    * RETURNS  : 
-    */
+    /*
+* PURPOSE  : Prevent case to update after 48hours of case is closed
+* PARAM    : Map of new case and Map of old case
+* RETURNS  : 
+*/
     public static void preventCaseUpdateAfter48Hrs(Map < Id, Case > oldCaseMap, Map < Id, Case > newCaseMap) {
         
         for (Case caseRecord : newCaseMap.values()) {
@@ -93,8 +110,8 @@ public class CaseTriggerHandler {
             if ((caseRecord.Status == 'Closed' && DateTime.now().addHours(-48) > oldCase.ClosedDate)
                 || (oldCase.Last_Status__c == 'Closed' && DateTime.now().addHours(-48) > oldCase.ClosedDate)) {
                     if (DateTime.now().addHours(-48) > caseRecord.ClosedDate) {
-                       // oldCase.addError('You cannot update a case more than 5 minits after it has been closed.');
-                       caseRecord.addError('You cannot update a case more than 48 hours after it has been closed.');
+                        // oldCase.addError('You cannot update a case more than 5 minits after it has been closed.');
+                        caseRecord.addError('You cannot update a case more than 48 hours after it has been closed.');
                     }
                 }
         }
@@ -102,10 +119,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-    * PURPOSE  : Track status change time
-    * PARAM    : List of Cases
-    * RETURNS  : 
-    */
+* PURPOSE  : Track status change time
+* PARAM    : List of Cases
+* RETURNS  : 
+*/
     public static void trackStatusChangeTiming(List < Case > caseList) {
         
         updatedEndTimeAndCalculateHrs(caseList);
@@ -114,79 +131,11 @@ public class CaseTriggerHandler {
         
     }
     
-    
     /*
-* PURPOSE  : Track status change time
+* PURPOSE  : Set End Date and calcualte horur for previous Case Status Change Tracker
 * PARAM    : List of Cases
 * RETURNS  : 
 */
-    public static void calculateTimeToClosure(List<Case> caseList) {
-        Map<Id, Id> caseIdToAccountIdMap = new Map<Id, Id>();
-        Set<Id> accountIds = new Set<Id>();
-        
-        // Fetch necessary data for calculation
-        for (Case caseRec : [SELECT Id, AccountId FROM Case WHERE Id IN :caseList]) {
-            caseIdToAccountIdMap.put(caseRec.Id, caseRec.AccountId);
-            accountIds.add(caseRec.AccountId);
-        }
-        
-        // Build business hours and holidays maps
-        Map<Id, Map<String, Map<String, Time>>> accountToBusinessHoursMap = new Map<Id, Map<String, Map<String, Time>>>();
-        for (Business_Hours__c businessHours : [
-            SELECT Account__c, Day__c, Start_Time__c, End_Time__c, Time_Zone__c 
-            FROM Business_Hours__c WHERE Account__c IN :accountIds
-        ]) {
-            if (!accountToBusinessHoursMap.containsKey(businessHours.Account__c)) {
-                accountToBusinessHoursMap.put(businessHours.Account__c, new Map<String, Map<String, Time>>());
-            }
-            Map<String, Time> startEndTime = new Map<String, Time>();
-            startEndTime.put('Start', convertTimeToGMT(businessHours.Start_Time__c, businessHours.Time_Zone__c));
-            startEndTime.put('End', convertTimeToGMT(businessHours.End_Time__c, businessHours.Time_Zone__c));
-            accountToBusinessHoursMap.get(businessHours.Account__c).put(businessHours.Day__c, startEndTime);
-        }
-        
-        Map<Id, Set<Date>> accountToHolidaysMap = new Map<Id, Set<Date>>();
-        for (Holiday__c holiday : [
-            SELECT Account__c, Date__c, IsRecurrence__c 
-            FROM Holiday__c WHERE Account__c IN :accountIds
-        ]) {
-            if (!accountToHolidaysMap.containsKey(holiday.Account__c)) {
-                accountToHolidaysMap.put(holiday.Account__c, new Set<Date>());
-            }
-            accountToHolidaysMap.get(holiday.Account__c).add(holiday.Date__c);
-            if (holiday.IsRecurrence__c) {
-                for (Integer year = Date.today().year() - 1; year <= Date.today().year() + 1; year++) {
-                    accountToHolidaysMap.get(holiday.Account__c).add(Date.newInstance(year, holiday.Date__c.month(), holiday.Date__c.day()));
-                }
-            }
-        }
-        
-        // Calculate time to closure for each case
-        List<Case> calculatedCases = new List<Case>();
-        for (Case caseRec : caseList) {
-            
-            Case updatedCase = CalculateBusinessHours.calculateCaseBusinessHours( caseRec, caseRec.CreatedDate, caseRec.ClosedDate,
-                                                                                 caseIdToAccountIdMap, accountToBusinessHoursMap,
-                                                                                 accountToHolidaysMap, 'Closure');
-            
-            updatedCase.Time_to_Closur_Business__c = updatedCase.Time_to_Closur_Business__c;
-            System.debug('5007z00000VcSG3AAN'+ updatedCase.Time_to_Closur_Business__c);
-            calculatedCases.add(updatedCase);
-        }
-        
-        // Update cases
-        if (!calculatedCases.isEmpty()) {
-            
-         update calculatedCases;
-        }
-    }
-    
-    
-    /*
-    * PURPOSE  : Set End Date and calcualte horur for previous Case Status Change Tracker
-    * PARAM    : List of Cases
-    * RETURNS  : 
-    */
     public static void updatedEndTimeAndCalculateHrs(List < Case > caseList) {
         List < Case_Status_Change_Tracker__c > statusTrackerListToUpate = new List < Case_Status_Change_Tracker__c > ();
         
@@ -223,10 +172,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-    * PURPOSE  : Create New Case Status Change Tracker
-    * PARAM    : List of Cases
-    * RETURNS  : 
-    */
+* PURPOSE  : Create New Case Status Change Tracker
+* PARAM    : List of Cases
+* RETURNS  : 
+*/
     public static void createNewCaseStatusChangeTracker(List < Case > caseList) {
         List < Case_Status_Change_Tracker__c > statusTrackerListToInsert = new List < Case_Status_Change_Tracker__c > ();
         
@@ -251,10 +200,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-    * PURPOSE  : Calculate time of status within business hours
-    * PARAM    : List of Case Status Change Tracker
-    * RETURNS  : List of Case Status Change Tracker records with Calculate hours 
-    */
+* PURPOSE  : Calculate time of status within business hours
+* PARAM    : List of Case Status Change Tracker
+* RETURNS  : List of Case Status Change Tracker records with Calculate hours 
+*/
     public static List < Case_Status_Change_Tracker__c > oldcalculateCaseBusinessHours(List < Case_Status_Change_Tracker__c > statusTrackerList) {
         
         List < Case_Status_Change_Tracker__c > newStatusTrackerList = new List < Case_Status_Change_Tracker__c > ();
@@ -278,14 +227,14 @@ public class CaseTriggerHandler {
         }
         return newStatusTrackerList;
     }
-
+    
     
     
     /*
-    * PURPOSE  : Calculate time of status within business hours
-    * PARAM    : List of Case Status Change Tracker
-    * RETURNS  : List of Case Status Change Tracker records with Calculate hours 
-    */
+* PURPOSE  : Calculate time of status within business hours
+* PARAM    : List of Case Status Change Tracker
+* RETURNS  : List of Case Status Change Tracker records with Calculate hours 
+*/
     public static List<Case_Status_Change_Tracker__c> calculateCaseBusinessHours(List<Case_Status_Change_Tracker__c> statusTrackerList) {
         List<Case_Status_Change_Tracker__c> newStatusTrackerList = new List<Case_Status_Change_Tracker__c>();
         
@@ -307,14 +256,14 @@ public class CaseTriggerHandler {
         Map<Id, Map<String, Map<String, Time>>> accountToBusinessHoursMap = new Map<Id, Map<String, Map<String, Time>>>();
         for (Business_Hours__c businessHours : [SELECT Account__c, Day__c, Start_Time__c, End_Time__c, Time_Zone__c 
                                                 FROM Business_Hours__c WHERE Account__c IN :accountIds]) {
-            if (!accountToBusinessHoursMap.containsKey(businessHours.Account__c)) {
-                accountToBusinessHoursMap.put(businessHours.Account__c, new Map<String, Map<String, Time>>());
-            }
-            Map<String, Time> startEndTime = new Map<String, Time>();
-            startEndTime.put('Start', convertTimeToGMT(businessHours.Start_Time__c, businessHours.Time_Zone__c));
-            startEndTime.put('End', convertTimeToGMT(businessHours.End_Time__c, businessHours.Time_Zone__c));
-            accountToBusinessHoursMap.get(businessHours.Account__c).put(businessHours.Day__c, startEndTime);
-        }
+                                                    if (!accountToBusinessHoursMap.containsKey(businessHours.Account__c)) {
+                                                        accountToBusinessHoursMap.put(businessHours.Account__c, new Map<String, Map<String, Time>>());
+                                                    }
+                                                    Map<String, Time> startEndTime = new Map<String, Time>();
+                                                    startEndTime.put('Start', convertTimeToGMT(businessHours.Start_Time__c, businessHours.Time_Zone__c));
+                                                    startEndTime.put('End', convertTimeToGMT(businessHours.End_Time__c, businessHours.Time_Zone__c));
+                                                    accountToBusinessHoursMap.get(businessHours.Account__c).put(businessHours.Day__c, startEndTime);
+                                                }
         
         // Get all holidays records related to the accounts
         Map<Id, Set<Date>> accountToHolidaysMap = new Map<Id, Set<Date>>();
@@ -409,12 +358,12 @@ public class CaseTriggerHandler {
         }
         return newStatusTrackerList;
     }
-
-	/*
-    * PURPOSE  : Convert Time to GMT
-    * PARAM    : Time field to be converted and Timezonekey
-    * RETURNS  : Converted Time
-    */
+    
+    /*
+* PURPOSE  : Convert Time to GMT
+* PARAM    : Time field to be converted and Timezonekey
+* RETURNS  : Converted Time
+*/
     public static Time convertTimeToGMT(Time timeToBeConverted, String timeZoneKey) {
         // Define the time zone IDs
         String denverTimeZoneId = timeZoneKey;
@@ -466,13 +415,206 @@ public class CaseTriggerHandler {
         }
     }
     /*public static void PreventCaseFromUpdateDelete(List<Case> newCases, Map<Id,Case> newCasesMap){
-        Map<Id, DTO.EnhanceSecurityControllerResponse> caseResult = EnhanceSecurityHelper.ValidateRecordsAccess(newCases, Case.sObjectType);
-        Map<Id,Case> caseMap = newCasesMap;
-        System.debug('caseResult ==> '+caseResult);
-        for(Id caseId : caseResult.keySet()){            
-            if (!caseResult.get(caseId).IsValid) {
-                caseMap.get(caseId).addError('You do not have access to update or delete this case.');
-            }   
+Map<Id, DTO.EnhanceSecurityControllerResponse> caseResult = EnhanceSecurityHelper.ValidateRecordsAccess(newCases, Case.sObjectType);
+Map<Id,Case> caseMap = newCasesMap;
+System.debug('caseResult ==> '+caseResult);
+for(Id caseId : caseResult.keySet()){            
+if (!caseResult.get(caseId).IsValid) {
+caseMap.get(caseId).addError('You do not have access to update or delete this case.');
+}   
+}
+}*/
+    
+    
+    /*
+* PURPOSE  : Track status change time
+* PARAM    : List of Cases
+* RETURNS  : 
+*/
+    public static void calculateTimeToBusinessCase(List<Case> caseList, String typeOfCalculation) {
+        Map<Id, Id> caseIdToAccountIdMap = new Map<Id, Id>();
+        Set<Id> accountIds = new Set<Id>();
+        
+        // Fetch necessary data for calculation
+        for (Case caseRec : caseList) {
+            caseIdToAccountIdMap.put(caseRec.Id, caseRec.AccountId);
+            accountIds.add(caseRec.AccountId);
         }
-    }*/
+        
+        // Build business hours and holidays maps
+        Map<Id, Map<String, Map<String, Time>>> accountToBusinessHoursMap = new Map<Id, Map<String, Map<String, Time>>>();
+        for (Business_Hours__c businessHours : [
+            SELECT Account__c, Day__c, Start_Time__c, End_Time__c, Time_Zone__c 
+            FROM Business_Hours__c WHERE Account__c IN :accountIds
+        ]) {
+            if (!accountToBusinessHoursMap.containsKey(businessHours.Account__c)) {
+                accountToBusinessHoursMap.put(businessHours.Account__c, new Map<String, Map<String, Time>>());
+            }
+            Map<String, Time> startEndTime = new Map<String, Time>();
+            startEndTime.put('Start', convertTimeToGMT(businessHours.Start_Time__c, businessHours.Time_Zone__c));
+            startEndTime.put('End', convertTimeToGMT(businessHours.End_Time__c, businessHours.Time_Zone__c));
+            accountToBusinessHoursMap.get(businessHours.Account__c).put(businessHours.Day__c, startEndTime);
+        }
+        
+        Map<Id, Set<Date>> accountToHolidaysMap = new Map<Id, Set<Date>>();
+        for (Holiday__c holiday : [
+            SELECT Account__c, Date__c, IsRecurrence__c 
+            FROM Holiday__c WHERE Account__c IN :accountIds
+        ]) {
+            if (!accountToHolidaysMap.containsKey(holiday.Account__c)) {
+                accountToHolidaysMap.put(holiday.Account__c, new Set<Date>());
+            }
+            accountToHolidaysMap.get(holiday.Account__c).add(holiday.Date__c);
+            if (holiday.IsRecurrence__c) {
+                for (Integer year = Date.today().year() - 1; year <= Date.today().year() + 1; year++) {
+                    accountToHolidaysMap.get(holiday.Account__c).add(Date.newInstance(year, holiday.Date__c.month(), holiday.Date__c.day()));
+                }
+            }
+        }
+        
+        // Calculate time to closure for each case
+        List<Case> calculatedCases = new List<Case>();
+        for (Case caseRec : caseList) {
+            Case updatedCase = new Case();
+            if(typeOfCalculation == 'Closure'){
+                updatedCase = calculateCaseBusinessHoursFixDate( caseRec, caseRec.CreatedDate, caseRec.ClosedDate,
+                                                                caseIdToAccountIdMap, accountToBusinessHoursMap,
+                                                                accountToHolidaysMap, typeOfCalculation);
+                calculatedCases.add(updatedCase);
+            }
+            if(typeOfCalculation == 'Resolve'){
+                updatedCase = calculateCaseBusinessHoursFixDate( caseRec, caseRec.CreatedDate, caseRec.Support_Resolved_Date__c,
+                                                                caseIdToAccountIdMap, accountToBusinessHoursMap,
+                                                                accountToHolidaysMap, typeOfCalculation);
+                calculatedCases.add(updatedCase);
+            }
+            
+        }
+        
+        // Update cases
+        if (!calculatedCases.isEmpty()) {
+            
+            Update calculatedCases;
+        }
+    }
+    
+    public static Case calculateCaseBusinessHoursFixDate(Case caseRecord, Datetime startDateTime, Datetime endDateTime, Map<Id, Id> caseIdToAccountIdMap, 
+                                                         Map<Id, Map<String, Map<String, Time>>> accountToBusinessHoursMap, Map<Id, Set<Date>> accountToHolidaysMap, 
+                                                         String fieldToUpdate) 
+    {
+        
+        Case returnCaseRec = new Case();
+        returnCaseRec.Id = caseRecord.Id;
+        
+        if (fieldToUpdate == 'Closure'){                                                               
+            returnCaseRec.Time_to_Closure_B_Minutes__c = 0;
+        }
+        if (fieldToUpdate == 'Resolve'){                                                               
+            returnCaseRec.Time_to_Resolve_B_Minutes__c = 0;
+        }
+        
+        if(startDateTime!= NULL && endDateTime != NULL){
+            Set<Id> caseIds = new Set<Id>();
+            Set<Id> accountIds = new Set<Id>();
+            
+            Integer businessMinutesDifference = 0;
+            Datetime startDate = startDateTime;
+            Datetime endDate = endDateTime;
+            Id accountId = caseRecord.AccountId;
+            Map<String, Map<String, Time>> businessHoursMap = accountToBusinessHoursMap.get(accountId);
+            Set<Date> holidaysSet = accountToHolidaysMap.containsKey(accountId) ? accountToHolidaysMap.get(accountId) : new Set<Date>();
+            
+            // Convert startDate and endDate to GMT
+            startDate = startDate.addSeconds(-startDate.second()); // Align start date to the beginning of the minute
+            endDate = endDate.addSeconds(-endDate.second()); // Align end date to the beginning of the minute
+            
+            Map<Date, Integer> validTimeMap = new Map<Date, Integer>();
+            
+            // Create a map of valid times for each day
+            Datetime currentDate = startDate;
+            while (currentDate <= endDate) {
+                Date currentDay = currentDate.date();
+                if (!holidaysSet.contains(currentDay)) {
+                    String dayOfWeek = currentDate.format('EEEE', 'GMT'); // Get full day name in GMT
+                    if (businessHoursMap != null && businessHoursMap.containsKey(dayOfWeek)) {
+                        Map<String, Time> businessHours = businessHoursMap.get(dayOfWeek);
+                        Time startTime = businessHours.get('Start');
+                        Time endTime = businessHours.get('End');
+                        
+                        // Calculate the total business minutes for the current day
+                        Integer businessMinutes = (endTime.hour() * 60 + endTime.minute()) - (startTime.hour() * 60 + startTime.minute());
+                        if (validTimeMap.containsKey(currentDay)) {
+                            validTimeMap.put(currentDay, validTimeMap.get(currentDay) + businessMinutes);
+                        } else {
+                            validTimeMap.put(currentDay, businessMinutes);
+                        }
+                    }
+                }
+                currentDate = currentDate.addDays(1);
+            }
+            
+            // Calculate the total business minutes
+            currentDate = startDate;
+            while (currentDate <= endDate) {
+                Date currentDay = currentDate.date();
+                
+                if (validTimeMap.containsKey(currentDay)) {
+                    Integer businessMinutesForDay = validTimeMap.get(currentDay);
+                    
+                    // Adjust the calculation for the start and end days
+                    if (currentDate.date() == startDate.date()) {
+                        Time startTime = convertTimeToGMT(startDate.time(), UserInfo.getTimeZone().getID());
+                        String dayOfWeek = currentDate.format('EEEE', 'GMT');
+                        Map<String, Time> businessHours = businessHoursMap.get(dayOfWeek);
+                        Time businessStartTime = businessHours.get('Start');
+                        Time businessEndTime = businessHours.get('End');
+                        
+                        if (startTime > businessStartTime) {
+                            businessMinutesForDay -= (startTime.hour() * 60 + startTime.minute()) - (businessStartTime.hour() * 60 + businessStartTime.minute());
+                        }
+                    }
+                    
+                    if (currentDate.date() == endDate.date()) {
+                        Time endTime = convertTimeToGMT(endDate.time(), UserInfo.getTimeZone().getID());
+                        String dayOfWeek = currentDate.format('EEEE', 'GMT');
+                        Map<String, Time> businessHours = businessHoursMap.get(dayOfWeek);
+                        Time businessStartTime = businessHours.get('Start');
+                        Time businessEndTime = businessHours.get('End');
+                        
+                        if (endTime < businessEndTime) {
+                            businessMinutesForDay -= (businessEndTime.hour() * 60 + businessEndTime.minute()) - (endTime.hour() * 60 + endTime.minute());
+                        }
+                    }
+                    
+                    businessMinutesDifference += businessMinutesForDay;
+                }
+                currentDate = currentDate.addDays(1);
+            }
+            
+            system.debug('businessMinutesDifference ::'+businessMinutesDifference);
+            
+            if(fieldToUpdate == 'Initial Assignment'){
+                
+                caseRecord.Initial_Assignment_Time_in_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;
+                
+            }
+            
+            else if (fieldToUpdate == 'Initial Response'){                    
+                
+                caseRecord.Initial_Response_Time_in_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;                    
+                
+            }
+            else if (fieldToUpdate == 'Closure'){                                                               
+                returnCaseRec.Time_to_Closure_B_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;                    
+                
+            }
+            else if (fieldToUpdate == 'Resolve'){                                                               
+                returnCaseRec.Time_to_Resolve_B_Minutes__c	 = businessMinutesDifference > 0 ? businessMinutesDifference : 0;                    
+                
+            }
+        }
+        return returnCaseRec;
+        
+    }
+    
 }
