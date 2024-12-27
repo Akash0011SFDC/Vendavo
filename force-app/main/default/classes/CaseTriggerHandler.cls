@@ -13,10 +13,10 @@ public class CaseTriggerHandler {
     
     
     /*
-* PURPOSE  : Before Update Operations
-* PARAM    : Map of old and new case
-* RETURNS  : 
-*/
+    * PURPOSE  : Before Update Operations
+    * PARAM    : Map of old and new case
+    * RETURNS  : 
+    */
     public static void beforeUpdate(Map<Id,Case> oldCaseMap, Map<Id,Case> newCaseMap) {
         //06-11-2024 : Commented to revert the case locking feature.
         // preventCaseUpdateAfter48Hrs(oldCaseMap, newCaseMap);
@@ -29,10 +29,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-* PURPOSE  : Before Delete Operations
-* PARAM    : Map of old 
-* RETURNS  : 
-*/
+    * PURPOSE  : Before Delete Operations
+    * PARAM    : Map of old 
+    * RETURNS  : 
+    */
     public static void beforeDelete(Map<Id,Case> oldCaseMap) {
         //preventCaseUpdateAfter48Hrs(oldCaseMap, newCaseMap);
         //23-10-2024 : reverted the case validations for enhanced security
@@ -40,38 +40,53 @@ public class CaseTriggerHandler {
     }
     
     /*
-* PURPOSE  : After Insert Operations
-* PARAM    : List of Cases
-* RETURNS  : 
-*/
+    * PURPOSE  : After Insert Operations
+    * PARAM    : List of Cases
+    * RETURNS  : 
+    */
     public static void afterInsert(List < Case > caseList) {
         trackStatusChangeTiming(caseList);
     }
     
     /*
-* PURPOSE  : After Update Operations
-* PARAM    : New Case Map and Old Case Map
-* RETURNS  :  
-*/
+    * PURPOSE  : After Update Operations
+    * PARAM    : New Case Map and Old Case Map
+    * RETURNS  :  
+    */
     public static void afterUpdate(Map < Id, Case > caseMap, Map < Id, Case > oldCaseMap) {
         List < Case > caseList = new List < Case > ();
-        
-        //List < Case > initialAssignmentTimeCaseList = new List < Case > ();
-        //List < Case > initialResponseTimeCaseList = new List < Case > ();
+        List < Case > initialAssignmentTimeCaseList = new List < Case > ();
+        List < Case > initialResponseTimeCaseList = new List < Case > ();
         List < Case > timeToClosureCaseList = new List < Case > ();
         List < Case > timeToResolveCaseList = new List < Case > ();
         
         for (Case caseRec: caseMap.values()) {
+            
+            //Create List of cases for status change
             if (caseRec.status != oldCaseMap.get(caseRec.Id).Status) {
                 caseList.add(caseRec);
             }
             
+            //Create List of cases for Inital Assignment change
+            if (caseRec.Initial_Assignment_Time__c != oldCaseMap.get(caseRec.Id).Initial_Assignment_Time__c) 
+            {
+                initialAssignmentTimeCaseList.add(caseRec);
+            }
+            
+            //Create List of cases for Inital Response change
+            if (caseRec.Initial_Response_Time__c != oldCaseMap.get(caseRec.Id).Initial_Response_Time__c) 
+            {
+                initialResponseTimeCaseList.add(caseRec);
+            }
+            
+            //Create List of cases for status change to Close
             if (caseRec.IsClosed == True && oldCaseMap.get(caseRec.Id).IsClosed != True && caseRec.ClosedDate!= NUll && caseRec.CreatedDate != NULL
                 || caseRec.IsClosed == False && oldCaseMap.get(caseRec.Id).IsClosed == True && caseRec.ClosedDate == NUll) 
             {
                 timeToClosureCaseList.add(caseRec);
             }
             
+            //Create List of cases for Support Resolved Date change
             if (caseRec.Support_Resolved_Date__c != oldCaseMap.get(caseRec.Id).Support_Resolved_Date__c) 
             {
                 timeToResolveCaseList.add(caseRec);
@@ -84,23 +99,34 @@ public class CaseTriggerHandler {
             trackStatusChangeTiming(caseList);
         }
         
-        //Calculate time to closure for cases
-        if (!timeToClosureCaseList.isEmpty()) {
-        calculateTimeToBusinessCase(timeToClosureCaseList, 'Closure');
+        //Calculate time to Inital Assignment time for cases
+        if (!initialAssignmentTimeCaseList.isEmpty()) {
+            calculateTimeToBusinessCase(initialAssignmentTimeCaseList, 'Initial_Assignment');
         }
         
+        //Calculate time to Inital Response time  for cases
+        if (!initialResponseTimeCaseList.isEmpty()) {
+            calculateTimeToBusinessCase(initialResponseTimeCaseList, 'Initial_Response');
+        }
+        
+        
         //Calculate time to closure for cases
+        if (!timeToClosureCaseList.isEmpty()) {
+            calculateTimeToBusinessCase(timeToClosureCaseList, 'Closure');
+        }
+        
+        //Calculate time to resolve for cases
         if (!timeToResolveCaseList.isEmpty()) {
-        calculateTimeToBusinessCase(timeToResolveCaseList, 'Resolve');
+            calculateTimeToBusinessCase(timeToResolveCaseList, 'Resolve');
         }
         
     }
     
     /*
-* PURPOSE  : Prevent case to update after 48hours of case is closed
-* PARAM    : Map of new case and Map of old case
-* RETURNS  : 
-*/
+    * PURPOSE  : Prevent case to update after 48hours of case is closed
+    * PARAM    : Map of new case and Map of old case
+    * RETURNS  : 
+    */
     public static void preventCaseUpdateAfter48Hrs(Map < Id, Case > oldCaseMap, Map < Id, Case > newCaseMap) {
         
         for (Case caseRecord : newCaseMap.values()) {
@@ -119,10 +145,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-* PURPOSE  : Track status change time
-* PARAM    : List of Cases
-* RETURNS  : 
-*/
+    * PURPOSE  : Track status change time
+    * PARAM    : List of Cases
+    * RETURNS  : 
+    */
     public static void trackStatusChangeTiming(List < Case > caseList) {
         
         updatedEndTimeAndCalculateHrs(caseList);
@@ -132,10 +158,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-* PURPOSE  : Set End Date and calcualte horur for previous Case Status Change Tracker
-* PARAM    : List of Cases
-* RETURNS  : 
-*/
+    * PURPOSE  : Set End Date and calcualte horur for previous Case Status Change Tracker
+    * PARAM    : List of Cases
+    * RETURNS  : 
+    */
     public static void updatedEndTimeAndCalculateHrs(List < Case > caseList) {
         List < Case_Status_Change_Tracker__c > statusTrackerListToUpate = new List < Case_Status_Change_Tracker__c > ();
         
@@ -172,10 +198,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-* PURPOSE  : Create New Case Status Change Tracker
-* PARAM    : List of Cases
-* RETURNS  : 
-*/
+    * PURPOSE  : Create New Case Status Change Tracker
+    * PARAM    : List of Cases
+    * RETURNS  : 
+    */
     public static void createNewCaseStatusChangeTracker(List < Case > caseList) {
         List < Case_Status_Change_Tracker__c > statusTrackerListToInsert = new List < Case_Status_Change_Tracker__c > ();
         
@@ -200,10 +226,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-* PURPOSE  : Calculate time of status within business hours
-* PARAM    : List of Case Status Change Tracker
-* RETURNS  : List of Case Status Change Tracker records with Calculate hours 
-*/
+    * PURPOSE  : Calculate time of status within business hours
+    * PARAM    : List of Case Status Change Tracker
+    * RETURNS  : List of Case Status Change Tracker records with Calculate hours 
+    */
     public static List < Case_Status_Change_Tracker__c > oldcalculateCaseBusinessHours(List < Case_Status_Change_Tracker__c > statusTrackerList) {
         
         List < Case_Status_Change_Tracker__c > newStatusTrackerList = new List < Case_Status_Change_Tracker__c > ();
@@ -231,10 +257,10 @@ public class CaseTriggerHandler {
     
     
     /*
-* PURPOSE  : Calculate time of status within business hours
-* PARAM    : List of Case Status Change Tracker
-* RETURNS  : List of Case Status Change Tracker records with Calculate hours 
-*/
+    * PURPOSE  : Calculate time of status within business hours
+    * PARAM    : List of Case Status Change Tracker
+    * RETURNS  : List of Case Status Change Tracker records with Calculate hours 
+    */
     public static List<Case_Status_Change_Tracker__c> calculateCaseBusinessHours(List<Case_Status_Change_Tracker__c> statusTrackerList) {
         List<Case_Status_Change_Tracker__c> newStatusTrackerList = new List<Case_Status_Change_Tracker__c>();
         
@@ -360,10 +386,10 @@ public class CaseTriggerHandler {
     }
     
     /*
-* PURPOSE  : Convert Time to GMT
-* PARAM    : Time field to be converted and Timezonekey
-* RETURNS  : Converted Time
-*/
+    * PURPOSE  : Convert Time to GMT
+    * PARAM    : Time field to be converted and Timezonekey
+    * RETURNS  : Converted Time
+    */
     public static Time convertTimeToGMT(Time timeToBeConverted, String timeZoneKey) {
         // Define the time zone IDs
         String denverTimeZoneId = timeZoneKey;
@@ -415,23 +441,23 @@ public class CaseTriggerHandler {
         }
     }
     /*public static void PreventCaseFromUpdateDelete(List<Case> newCases, Map<Id,Case> newCasesMap){
-Map<Id, DTO.EnhanceSecurityControllerResponse> caseResult = EnhanceSecurityHelper.ValidateRecordsAccess(newCases, Case.sObjectType);
-Map<Id,Case> caseMap = newCasesMap;
-System.debug('caseResult ==> '+caseResult);
-for(Id caseId : caseResult.keySet()){            
-if (!caseResult.get(caseId).IsValid) {
-caseMap.get(caseId).addError('You do not have access to update or delete this case.');
-}   
-}
-}*/
-    
-    
+    Map<Id, DTO.EnhanceSecurityControllerResponse> caseResult = EnhanceSecurityHelper.ValidateRecordsAccess(newCases, Case.sObjectType);
+    Map<Id,Case> caseMap = newCasesMap;
+    System.debug('caseResult ==> '+caseResult);
+    for(Id caseId : caseResult.keySet()){            
+    if (!caseResult.get(caseId).IsValid) {
+    caseMap.get(caseId).addError('You do not have access to update or delete this case.');
+    }   
+    }
+    }*/
+        
+        
     /*
-* PURPOSE  : Track status change time
-* PARAM    : List of Cases
-* RETURNS  : 
-*/
-    public static void calculateTimeToBusinessCase(List<Case> caseList, String typeOfCalculation) {
+    * PURPOSE  : Calculate Time as per Business Hours for Case
+    * PARAM    : List of Cases, Field for which time is to be calculated
+    * RETURNS  : 
+    */
+    public static void calculateTimeToBusinessCase(List<Case> caseList, String fieldToCalculation) {
         Map<Id, Id> caseIdToAccountIdMap = new Map<Id, Id>();
         Set<Id> accountIds = new Set<Id>();
         
@@ -476,16 +502,31 @@ caseMap.get(caseId).addError('You do not have access to update or delete this ca
         List<Case> calculatedCases = new List<Case>();
         for (Case caseRec : caseList) {
             Case updatedCase = new Case();
-            if(typeOfCalculation == 'Closure'){
-                updatedCase = calculateCaseBusinessHoursFixDate( caseRec, caseRec.CreatedDate, caseRec.ClosedDate,
+            
+            if(fieldToCalculation == 'Initial_Assignment'){
+                updatedCase = calculateCaseBusinessHoursFixDate( caseRec, caseRec.CreatedDate, caseRec.Initial_Assignment_Time__c,
                                                                 caseIdToAccountIdMap, accountToBusinessHoursMap,
-                                                                accountToHolidaysMap, typeOfCalculation);
+                                                                accountToHolidaysMap, fieldToCalculation);
                 calculatedCases.add(updatedCase);
             }
-            if(typeOfCalculation == 'Resolve'){
+            
+            if(fieldToCalculation == 'Initial_Response'){
+                updatedCase = calculateCaseBusinessHoursFixDate( caseRec, caseRec.CreatedDate, caseRec.Initial_Response_Time__c,
+                                                                caseIdToAccountIdMap, accountToBusinessHoursMap,
+                                                                accountToHolidaysMap, fieldToCalculation);
+                calculatedCases.add(updatedCase);
+            }
+            
+            if(fieldToCalculation == 'Closure'){
+                updatedCase = calculateCaseBusinessHoursFixDate( caseRec, caseRec.CreatedDate, caseRec.ClosedDate,
+                                                                caseIdToAccountIdMap, accountToBusinessHoursMap,
+                                                                accountToHolidaysMap, fieldToCalculation);
+                calculatedCases.add(updatedCase);
+            }
+            if(fieldToCalculation == 'Resolve'){
                 updatedCase = calculateCaseBusinessHoursFixDate( caseRec, caseRec.CreatedDate, caseRec.Support_Resolved_Date__c,
                                                                 caseIdToAccountIdMap, accountToBusinessHoursMap,
-                                                                accountToHolidaysMap, typeOfCalculation);
+                                                                accountToHolidaysMap, fieldToCalculation);
                 calculatedCases.add(updatedCase);
             }
             
@@ -498,6 +539,11 @@ caseMap.get(caseId).addError('You do not have access to update or delete this ca
         }
     }
     
+    /*
+    * PURPOSE  : Calculate Time in minutes as per Business Hours for Case for start and End date
+    * PARAM    : Case, StartDateTime, EndDateTime, Map of case to Account, BusinessaHours and Holdiday Map
+    * RETURNS  : Case
+    */
     public static Case calculateCaseBusinessHoursFixDate(Case caseRecord, Datetime startDateTime, Datetime endDateTime, Map<Id, Id> caseIdToAccountIdMap, 
                                                          Map<Id, Map<String, Map<String, Time>>> accountToBusinessHoursMap, Map<Id, Set<Date>> accountToHolidaysMap, 
                                                          String fieldToUpdate) 
@@ -506,12 +552,20 @@ caseMap.get(caseId).addError('You do not have access to update or delete this ca
         Case returnCaseRec = new Case();
         returnCaseRec.Id = caseRecord.Id;
         
+        if (fieldToUpdate == 'Initial_Assignment'){                                                               
+            returnCaseRec.Initial_Assignment_Time_in_Minutes__c = 0;
+        }
+        
+        if (fieldToUpdate == 'Initial_Response'){                                                               
+            returnCaseRec.Initial_Response_Time_in_Minutes__c = 0;
+        }
         if (fieldToUpdate == 'Closure'){                                                               
             returnCaseRec.Time_to_Closure_B_Minutes__c = 0;
         }
         if (fieldToUpdate == 'Resolve'){                                                               
             returnCaseRec.Time_to_Resolve_B_Minutes__c = 0;
         }
+        
         
         if(startDateTime!= NULL && endDateTime != NULL){
             Set<Id> caseIds = new Set<Id>();
@@ -593,15 +647,15 @@ caseMap.get(caseId).addError('You do not have access to update or delete this ca
             
             system.debug('businessMinutesDifference ::'+businessMinutesDifference);
             
-            if(fieldToUpdate == 'Initial Assignment'){
+            if(fieldToUpdate == 'Initial_Assignment'){
                 
-                caseRecord.Initial_Assignment_Time_in_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;
+                returnCaseRec.Initial_Assignment_Time_in_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;
                 
             }
             
-            else if (fieldToUpdate == 'Initial Response'){                    
+            else if (fieldToUpdate == 'Initial_Response'){                    
                 
-                caseRecord.Initial_Response_Time_in_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;                    
+                returnCaseRec.Initial_Response_Time_in_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;                    
                 
             }
             else if (fieldToUpdate == 'Closure'){                                                               

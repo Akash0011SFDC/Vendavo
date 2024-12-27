@@ -10,15 +10,18 @@ public class CalculateBusinessHours {
             caseIds.add(input.caseId);
             flowInputName = input.flowName;
         }
-        List<Case> caseRecords = [SELECT Id, Initial_Assignment_Time_in_Minutes__c, Initial_Response_Time_in_Minutes__c
+        List<Case> caseRecords = [SELECT Id, Owner.Name, OwnerId, Initial_Assignment_Time_in_Minutes__c, Initial_Response_Time_in_Minutes__c
                                  FROM Case
                                  WHERE Id IN :caseIds];
+        System.debug('case record ====>'+caseRecords[0]);
         // Get all business hours records related to the accounts
         Map<Id, Map<String, Map<String, Time>>> accountToBusinessHoursMap = new Map<Id, Map<String, Map<String, Time>>>();
+        Map<Id, String> accountToTimezone = new Map<Id, String>();
         for (Business_Hours__c businessHours : [SELECT Account__c, Day__c, Start_Time__c, End_Time__c, Time_Zone__c 
                                                 FROM Business_Hours__c WHERE Account__c IN :accountIds]) {
             if (!accountToBusinessHoursMap.containsKey(businessHours.Account__c)) {
                 accountToBusinessHoursMap.put(businessHours.Account__c, new Map<String, Map<String, Time>>());
+                accountToTimezone.put(businessHours.Account__c, businessHours.Time_Zone__c);
             }
             Map<String, Time> startEndTime = new Map<String, Time>();
             startEndTime.put('Start', CaseTriggerHandler.convertTimeToGMT(businessHours.Start_Time__c, businessHours.Time_Zone__c));
@@ -42,10 +45,14 @@ public class CalculateBusinessHours {
         for (FlowInput input : flowInputs) {
             Integer businessMinutesDifference = 0;
             Datetime startDate = input.startDateTime;
+            system.debug('startDate'+ startDate);
             Datetime endDate = input.endDateTime;
+            system.debug('endDate'+ endDate);
             Id accountId = input.accountId;
             Id caseId = input.caseId;
+            //String timezone = accountToTimezone.get(accountId);
             Map<String, Map<String, Time>> businessHoursMap = accountToBusinessHoursMap.get(accountId);
+            system.debug('businessHoursMap'+ businessHoursMap);
         	Set<Date> holidaysSet = accountToHolidaysMap.containsKey(accountId) ? accountToHolidaysMap.get(accountId) : new Set<Date>();
             Map<Date, Integer> validTimeMap = new Map<Date, Integer>();
             // Create a map of valid times for each day
@@ -83,37 +90,41 @@ public class CalculateBusinessHours {
             }
         	// Calculate the total business minutes
             currentDate = startDate;
-            system.debug('currentDate'+ currentDate);
+            system.debug('validTimeMap'+ validTimeMap);
             while (currentDate <= endDate) {
+                System.debug('currentDate'+currentDate);
                 Date currentDay = currentDate.date();
                 if (validTimeMap.containsKey(currentDay)) {
                     Integer businessMinutesForDay = validTimeMap.get(currentDay);
-                    
+                    System.debug('in while loop businessMinutesForDay'+businessMinutesForDay);
                     // Adjust the calculation for the start and end days
                     if (currentDate.date() == startDate.date()) {
                         Time startTime = CaseTriggerHandler.convertTimeToGMT(startDate.time(), UserInfo.getTimeZone().getID());
+                        system.debug('In if of startdate startTime'+ startTime);
                         String dayOfWeek = currentDate.format('EEEE', 'GMT');
                         Map<String, Time> businessHours = businessHoursMap.get(dayOfWeek);
                         Time businessStartTime = businessHours.get('Start');
+                        system.debug('In if of startdate businessStartTime'+ businessStartTime);
                         Time businessEndTime = businessHours.get('End');
-                        
-                        if (startTime > businessStartTime) {
+                        if (startTime > businessStartTime ) {
                             businessMinutesForDay -= (startTime.hour() * 60 + startTime.minute()) - (businessStartTime.hour() * 60 + businessStartTime.minute());
+                        	system.debug('In if of startdate businessMinutesForDay'+ businessMinutesForDay);
                         }
                     }
                     
                     if (currentDate.date() == endDate.date()) {
                         Time endTime = CaseTriggerHandler.convertTimeToGMT(endDate.time(), UserInfo.getTimeZone().getID());
+                        system.debug('In if of endDate endTime'+ endTime);
                         String dayOfWeek = currentDate.format('EEEE', 'GMT');
                         Map<String, Time> businessHours = businessHoursMap.get(dayOfWeek);
                         Time businessStartTime = businessHours.get('Start');
                         Time businessEndTime = businessHours.get('End');
-                        
+                        system.debug('In if of endDate businessEndTime'+ businessEndTime);
                         if (endTime < businessEndTime) {
                             businessMinutesForDay -= (businessEndTime.hour() * 60 + businessEndTime.minute()) - (endTime.hour() * 60 + endTime.minute());
                         }
+                        system.debug('in if of enddate businessMinutesForDay'+ businessMinutesForDay);
                     }
-                    
                     businessMinutesDifference += businessMinutesForDay;
                 }
                 currentDate = currentDate.addDays(1);
@@ -121,10 +132,11 @@ public class CalculateBusinessHours {
             system.debug('businessMinutesDifference'+ businessMinutesDifference);
             for(Case caseRecord : caseRecords){
                 if(flowInputName == 'Update Initial Assignment Time Flow'){
-                    caseRecord.Initial_Assignment_Time_in_Minutes__c = businessMinutesDifference;
+                    caseRecord.Initial_Assignment_Time_in_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;
+                    system.debug('Initial_Assignment_Time_in_Minutes__c'+ caseRecord.Initial_Assignment_Time_in_Minutes__c);
                 }
                 else if (flowInputName == 'Update Initial Response Time Flow'){                    
-                    caseRecord.Initial_Response_Time_in_Minutes__c = businessMinutesDifference;                    
+                    caseRecord.Initial_Response_Time_in_Minutes__c = businessMinutesDifference > 0 ? businessMinutesDifference : 0;                    
                 }
             }
             UPDATE caseRecords;

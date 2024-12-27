@@ -86,4 +86,25 @@ public class CaseTriggerHandlerTest {
         Test.stopTest();
     }
     
+    
+    @isTest
+    static void testCalculateBusinessHours() {
+        List<Case> caseList = new List<Case>();
+        
+        for(Case caseRec:  [SELECT ID FROM Case]){
+            caseRec.Initial_Assignment_Time__c = System.Now();
+            caseRec.Initial_Response_Time__c = System.Now();
+            caseRec.Support_Resolved_Date__c = System.Now();
+            caseRec.Resolution_Type__c = '3rd Party Bug';
+            caseRec.status= 'Closed';
+            caseList.add(caseRec);
+        }
+        
+        Test.startTest();
+        
+        UPDATE caseList;
+        
+        Test.stopTest();
+    }
+    
 }
